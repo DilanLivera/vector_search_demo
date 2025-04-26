@@ -1,0 +1,97 @@
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<header class="w-full bg-[#1a2234] border-b border-gray-700">
+    <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <a href="/"
+                   class="flex items-center space-x-2">
+                    <svg class="w-8 h-8 text-blue-400"
+                         fill="currentColor"
+                         viewBox="0 0 24 24"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M19.023 16.977a35.13 35.13 0 0 1-1.367-1.384c-.372-.378-.596-.653-.596-.653l-2.8-1.337A6.962 6.962 0 0 0 16 9c0-3.859-3.14-7-7-7S2 5.141 2 9s3.14 7 7 7c1.763 0 3.37-.66 4.603-1.739l1.337 2.8s.275.224.653.596c.387.363.896.854 1.384 1.367l1.358 1.392.604.646 2.121-2.121-.646-.604c-.379-.372-.885-.866-1.391-1.36zM9 14c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5zm-3-5a3 3 0 1 0 6 0 3 3 0 0 0-6 0z"
+                              clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-xl font-semibold whitespace-nowrap text-blue-400">
+                        Vector Search Demo
+                    </span>
+                </a>
+            </div>
+
+            <div class="flex items-center">
+                @if (_isAuthenticated)
+                {
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-300">@_userName</span>
+                        <button @onclick="SignOut"
+                                class="flex items-center space-x-2 text-gray-400 hover:text-gray-200">
+                            <svg class="w-6 h-6"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 viewBox="0 0 24 24"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <button @onclick="SignIn"
+                            class="flex items-center space-x-2 text-gray-400 hover:text-gray-200">
+                        <svg class="w-6 h-6"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        <span>Sign In with Google</span>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</header>
+
+@code
+{
+    private bool _isAuthenticated;
+    private string? _userName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        ClaimsPrincipal user = authState.User;
+
+        if (user.Identity is null)
+        {
+            return;
+        }
+
+        _isAuthenticated = user.Identity.IsAuthenticated;
+
+        if (_isAuthenticated)
+        {
+            _userName = user.Identity.Name;
+        }
+    }
+
+    private void SignIn() => NavigationManager.NavigateTo(uri: "/signin", forceLoad: true);
+
+    private void SignOut() => NavigationManager.NavigateTo(uri: "/signout", forceLoad: true);
+
+}

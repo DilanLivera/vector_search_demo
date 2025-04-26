@@ -1,17 +1,23 @@
 using UI.Components;
+using UI.Infrastructure;
 
-WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
+builder.Services
+       .AddRazorComponents()
        .AddInteractiveServerComponents();
 
-WebApplication? app = builder.Build();
+builder.Services.AddHttpContextAccessor();
 
-// Configure the HTTP request pipeline.
+builder.Services.AddApplicationAuth(builder.Configuration);
+
+builder.Services.AddAuthorizationCore();
+
+WebApplication app = builder.Build();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler(errorHandlingPath: "/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
@@ -20,6 +26,8 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.UseApplicationAuth();
 
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();

@@ -1,0 +1,5 @@
+@language = en-US
+
+### Discover
+GET https://api.themoviedb.org/3/discover/movie?api_key={{themoviedb_apikey}}&language={{language}}&page=50
+Accept: application/json

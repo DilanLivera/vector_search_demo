@@ -1,0 +1,55 @@
+﻿# to run the compose file: docker compose up -d --force-recreate --build
+services:
+
+  # Uncomment the following to run the application using docker.
+  #  ui:
+  #    image: ui
+  #    container_name: ui
+  #    hostname: ui
+  #    build:
+  #      context: .
+  #      dockerfile: src/UI/Dockerfile
+
+  aspire-dashboard:
+    # https://learn.microsoft.com/samples/dotnet/aspire-samples/aspire-standalone-dashboard
+    # https://hub.docker.com/r/microsoft/dotnet-aspire-dashboard/
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    container_name: vector-search-demo-aspire-dashboard
+    hostname: aspire-dashboard
+    environment:
+      - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+    ports:
+      - "127.0.0.1:18888:18888"
+      - "127.0.0.1:18889:18889"
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: vector-search-demo-aspire-qdrant
+    hostname: qdrant
+    ports:
+      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6334:6334"
+    volumes:
+      - ./container_volumes/qdrant:/qdrant/storage
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:6333/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # after container is started, run 'ollama pull mxbai-embed-large:335m' manually in container's terminal
+  ollama:
+    # https://hub.docker.com/r/ollama/ollama
+    image: ollama/ollama:latest
+    container_name: vector-search-demo-ollama
+    hostname: ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    pull_policy: always
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./container_volumes/ollama:/root/.ollama

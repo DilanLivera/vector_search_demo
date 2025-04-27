@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # Onnx models
 *.onnx
+
+# docker container volumes
+container_volumes

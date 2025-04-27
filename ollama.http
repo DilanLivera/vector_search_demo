@@ -1,0 +1,14 @@
+### check ollama is running
+GET http://localhost:11434/
+
+### get models
+GET http://localhost:11434/api/tags
+
+### generate embeddings
+POST http://localhost:11434/api/embeddings
+Content-Type: application/json
+
+{
+  "model": "mxbai-embed-large",
+  "prompt": "Represent this sentence for searching relevant passages: The sky is blue because of Rayleigh scattering"
+}

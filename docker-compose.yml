@@ -1,14 +1,15 @@
 ﻿# to run the compose file: docker compose up -d --force-recreate --build
 services:
 
-  # Uncomment the following to run the application using docker.
-  #  ui:
-  #    image: ui
-  #    container_name: ui
-  #    hostname: ui
-  #    build:
-  #      context: .
-  #      dockerfile: src/UI/Dockerfile
+  ui:
+    image: ui
+    container_name: ui
+    hostname: ui
+    build:
+      context: .
+      dockerfile: src/UI/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
 
   aspire-dashboard:
     # https://learn.microsoft.com/samples/dotnet/aspire-samples/aspire-standalone-dashboard

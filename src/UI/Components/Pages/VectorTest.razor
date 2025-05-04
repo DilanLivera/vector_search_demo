@@ -1,0 +1,171 @@
+@page "/vector-test"
+@inject TestVectorCollection VectorCollection
+@rendermode InteractiveServer
+@using Qdrant.Client.Grpc
+@using Range=Qdrant.Client.Grpc.Range
+@using UI.Infrastructure
+@using static Qdrant.Client.Grpc.Conditions
+
+<PageTitle>Vector Test</PageTitle>
+
+<div class="max-w-4xl mx-auto p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            Vector Collection Test
+        </h1>
+
+        <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+            <p class="text-sm">
+                This page demonstrates vector similarity search using Qdrant. Each vector has 100 dimensions and includes metadata (color and random number).
+            </p>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Add Vectors
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Click this button to populate the collection with 100 random vectors. Each vector:
+                </p>
+                <ul class="mt-2 text-sm list-disc list-inside">
+                    <li>Has 100 random float values between 0 and 1</li>
+                    <li>Has a unique ID from 1 to 100</li>
+                    <li>Includes metadata: color="red" and a random number (0-9)</li>
+                </ul>
+            </div>
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                    @onclick="AddVectorsAsync">
+                Add
+            </button>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Search Vectors
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Enter a query vector to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
+                </p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Query Vector
+                </label>
+                <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       @bind="QueryVectorString"/>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Enter 100 comma-separated values between 0 and 1
+                </p>
+            </div>
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                    @onclick="SearchVectorsAsync">
+                Search
+            </button>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Filtered Search
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Search for similar vectors but only return those where the random number is greater than or equal to the specified value. This demonstrates how to combine vector similarity search with metadata filtering.
+                </p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Minimum Random Number
+                </label>
+                <input type="number"
+                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       @bind="MinRandomNumber"/>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Enter a number between 0 and 9
+                </p>
+            </div>
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                    @onclick="SearchWithFilterAsync">
+                Search
+            </button>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Search Results
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Results show the 5 most similar vectors, ordered by similarity score (higher is more similar). Each result includes:
+                </p>
+                <ul class="mt-2 text-sm list-disc list-inside">
+                    <li>ID: The unique identifier of the vector</li>
+                    <li>Score: Similarity score (0-1, higher means more similar)</li>
+                    <li>Color: Always "red" in this demo</li>
+                    <li>Random Number: A number between 0-9</li>
+                </ul>
+            </div>
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">ID</th>
+                    <th scope="col" class="px-6 py-3">Score</th>
+                    <th scope="col" class="px-6 py-3">Color</th>
+                    <th scope="col" class="px-6 py-3">Random Number</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (ScoredPoint result in SearchResults)
+                {
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <td class="px-6 py-4">@result.Id</td>
+                        <td class="px-6 py-4">@result.Score</td>
+                        <td class="px-6 py-4">@result.Payload["color"]</td>
+                        <td class="px-6 py-4">@result.Payload["rand_number"]</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string QueryVectorString { get; set; } = "0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0";
+    private int MinRandomNumber { get; set; } = 3;
+    private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
+
+    async private Task AddVectorsAsync() => await VectorCollection.AddVectorsAsync();
+
+    async private Task SearchVectorsAsync()
+    {
+        float[] queryVector = QueryVectorString.Split(separator: ',')
+                                               .Select(float.Parse)
+                                               .ToArray();
+
+        SearchResults = await VectorCollection.SearchAsync(queryVector);
+    }
+
+    async private Task SearchWithFilterAsync()
+    {
+        float[] queryVector = QueryVectorString.Split(separator: ',')
+                                               .Select(float.Parse)
+                                               .ToArray();
+
+        Condition condition = new()
+                              {
+                                  Filter = Range(field: "rand_number", new Range { Gte = MinRandomNumber })
+                              };
+
+        SearchResults = await VectorCollection.SearchAsync(queryVector, condition);
+    }
+}

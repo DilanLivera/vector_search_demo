@@ -41,11 +41,19 @@ services:
       retries: 5
       start_period: 5s
 
-  # after container is started, run 'ollama pull mxbai-embed-large:335m' manually in container's terminal
+  # after container is started,
+  # run 'ollama pull mxbai-embed-large:335m' command manually in container's terminal
+  # or run 'docker exec -it ollama ollama pull mxbai-embed-large:335m' command from a terminal(outside of container)
+  # please refer to the https://ollama.com/blog/embedding-models to find a list of embedding models
+  # you can use the following request to test
+  # curl http://localhost:11434/api/embed -d '{
+  #   "model": "mxbai-embed-large",
+  #   "input": "Llamas are members of the camelid family"
+  # }'
   ollama:
     # https://hub.docker.com/r/ollama/ollama
     image: ollama/ollama:latest
-    container_name: vector-search-demo-ollama
+    container_name: ollama
     hostname: ollama
     ports:
       - "127.0.0.1:11434:11434"

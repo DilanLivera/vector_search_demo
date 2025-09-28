@@ -21,14 +21,25 @@ public sealed class TestVectorCollection
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        bool doesCollectionExist = await _client.CollectionExistsAsync(CollectionName);
-        if (!doesCollectionExist)
+        if (await _client.CollectionExistsAsync(CollectionName))
         {
-            VectorParams vectorsConfig = new()
-                                         {
-                                             Size = 100, Distance = Distance.Cosine
-                                         };
-            await _client.CreateCollectionAsync(CollectionName, vectorsConfig);
+            await _client.DeleteCollectionAsync(CollectionName);
+
+            if (await _client.CollectionExistsAsync(CollectionName))
+            {
+                throw new InvalidOperationException($"Failed to delete '{CollectionName}'");
+            }
+        }
+
+        VectorParams vectorsConfig = new()
+                                     {
+                                         Size = 100, Distance = Distance.Cosine
+                                     };
+        await _client.CreateCollectionAsync(CollectionName, vectorsConfig);
+
+        if (!await _client.CollectionExistsAsync(CollectionName))
+        {
+            throw new InvalidOperationException($"'{CollectionName}' collection not found");
         }
     }
 

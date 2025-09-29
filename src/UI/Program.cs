@@ -17,7 +17,10 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddHttpClient<VectorEmbeddingGenerateClient>();
 
 builder.Services.AddSingleton<TestVectorCollection>();
-builder.Services.AddSingleton<QdrantClient>(_ => new QdrantClient(host: "localhost"));
+builder.Services.AddSingleton<QdrantClient>(_ => new QdrantClient(host: "localhost",
+                                                                  port: 6334,
+                                                                  apiKey: null,
+                                                                  https: false));
 
 WebApplication app = builder.Build();
 

@@ -14,6 +14,8 @@ builder.Services.AddApplicationAuth(builder.Configuration);
 
 builder.Services.AddAuthorizationCore();
 
+builder.Services.AddHttpClient<VectorEmbeddingGenerateClient>();
+
 builder.Services.AddSingleton<TestVectorCollection>();
 builder.Services.AddSingleton<QdrantClient>(_ => new QdrantClient(host: "localhost"));
 

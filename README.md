@@ -29,7 +29,20 @@ This is a demo application for vector search.
 5. **Copy the Client ID and Client Secret**
     - After creation, you’ll see the **Client ID** and **Client Secret**. Save these for later use.
 
+## How to run the application
+
+### Prerequisites
+
+- [Qdrant vector database](https://qdrant.tech/)
+- Ollama (docker compose)
+- Ollama Embedding model([Embedding models](https://ollama.com/blog/embedding-models))
+
+qdrant dashboard: http://localhost:6333/dashboard
+aspire dashboard: http://localhost:18888
+
 ## Resources
 
 - [Add Auth0 Authentication to Blazor Web Apps](https://auth0.com/blog/auth0-authentication-blazor-web-apps/)
 - [ASP.NET Core Blazor authentication state](https://learn.microsoft.com/en-us/aspnet/core/blazor/security/authentication-state)
+- [How to Get Started with Qdrant Locally](https://qdrant.tech/documentation/quickstart)
+- [Qdrant .NET SDK](https://github.com/qdrant/qdrant-dotnet)

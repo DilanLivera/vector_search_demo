@@ -10,10 +10,15 @@ namespace UI.Infrastructure;
 public sealed class TestVectorCollection
 {
     private const string CollectionName = "test";
-    private readonly QdrantClient _client;
+    private readonly QdrantClient _qdrantClient;
+    private readonly VectorEmbeddingGenerateClient _embeddingGenerateClient;
     private const ulong Limit = 5; // the 5 closest points
 
-    public TestVectorCollection(QdrantClient client) => _client = client;
+    public TestVectorCollection(QdrantClient qdrantClient, VectorEmbeddingGenerateClient embeddingGenerateClient)
+    {
+        _qdrantClient = qdrantClient;
+        _embeddingGenerateClient = embeddingGenerateClient;
+    }
 
     /// <summary>
     /// Ensures the vector collection exists in Qdrant.
@@ -21,11 +26,11 @@ public sealed class TestVectorCollection
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        if (await _client.CollectionExistsAsync(CollectionName))
+        if (await _qdrantClient.CollectionExistsAsync(CollectionName))
         {
-            await _client.DeleteCollectionAsync(CollectionName);
+            await _qdrantClient.DeleteCollectionAsync(CollectionName);
 
-            if (await _client.CollectionExistsAsync(CollectionName))
+            if (await _qdrantClient.CollectionExistsAsync(CollectionName))
             {
                 throw new InvalidOperationException($"Failed to delete '{CollectionName}'");
             }
@@ -33,11 +38,12 @@ public sealed class TestVectorCollection
 
         VectorParams vectorsConfig = new()
                                      {
-                                         Size = 100, Distance = Distance.Cosine
+                                         Size = 1024, // this should match the number of components in a vector
+                                         Distance = Distance.Cosine
                                      };
-        await _client.CreateCollectionAsync(CollectionName, vectorsConfig);
+        await _qdrantClient.CreateCollectionAsync(CollectionName, vectorsConfig);
 
-        if (!await _client.CollectionExistsAsync(CollectionName))
+        if (!await _qdrantClient.CollectionExistsAsync(CollectionName))
         {
             throw new InvalidOperationException($"'{CollectionName}' collection not found");
         }
@@ -49,49 +55,158 @@ public sealed class TestVectorCollection
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task AddVectorsAsync()
     {
-        Random random = new();
-        List<PointStruct> points = Enumerable.Range(1, 100)
-                                             .Select(i =>
-                                             {
-                                                 float[] vectors = Enumerable.Range(1, 100)
-                                                                             .Select(_ => (float)random.NextDouble())
-                                                                             .ToArray();
+        List<string> colors =
+        [
+            "Red",
+            "Scarlet",
+            "Crimson",
+            "Burgundy",
+            "Maroon",
+            "Ruby",
+            "Cerise",
+            "Carmine",
+            "Barn Red",
+            "Coral",
+            "Salmon",
+            "Pink",
+            "Hot Pink",
+            "Rose",
+            "Fuchsia",
+            "Magenta",
+            "Raspberry",
+            "Lavender Pink",
+            "Light Salmon",
+            "Dark Red",
+            "Orange",
+            "Dark Orange",
+            "Tangerine",
+            "Apricot",
+            "Peach",
+            "Gold",
+            "Yellow",
+            "Lemon",
+            "Canary",
+            "Chartreuse",
+            "Mustard",
+            "Saffron",
+            "Amber",
+            "Beige",
+            "Khaki",
+            "Cream",
+            "Papaya Whip",
+            "Corn",
+            "Citrine",
+            "Goldenrod",
+            "Green",
+            "Lime",
+            "Forest Green",
+            "Emerald",
+            "Jade",
+            "Sea Green",
+            "Mint",
+            "Olive",
+            "Sage",
+            "Hunter Green",
+            "Kelly Green",
+            "Spring Green",
+            "Dark Green",
+            "Aquamarine",
+            "Chartreuse Green",
+            "Moss Green",
+            "Pear",
+            "Shamrock Green",
+            "Teal Green",
+            "Artichoke Green",
+            "Blue",
+            "Navy",
+            "Royal Blue",
+            "Sapphire",
+            "Azure",
+            "Cerulean",
+            "Sky Blue",
+            "Baby Blue",
+            "Turquoise",
+            "Cyan",
+            "Teal",
+            "Indigo",
+            "Denim",
+            "Periwinkle",
+            "Powder Blue",
+            "Cadet Blue",
+            "Steel Blue",
+            "Midnight Blue",
+            "Cobalt",
+            "Electric Blue",
+            "Purple",
+            "Violet",
+            "Lavender",
+            "Plum",
+            "Lilac",
+            "Amethyst",
+            "Mauve",
+            "Thistle",
+            "Orchid",
+            "Byzantium",
+            "Black",
+            "White",
+            "Gray",
+            "Silver",
+            "Charcoal",
+            "Brown",
+            "Chocolate",
+            "Tan",
+            "Sepia",
+            "Ivory"
+        ];
 
-                                                 return new PointStruct
-                                                        {
-                                                            Id = (ulong)i,
-                                                            Vectors = vectors,
-                                                            Payload =
-                                                            {
-                                                                ["color"] = "red", ["rand_number"] = i % 10
-                                                            }
-                                                        };
-                                             })
-                                             .ToList();
+        List<PointStruct> points = [];
+        foreach (string color in colors)
+        {
+            Vectors vectors = await _embeddingGenerateClient.GenerateVectorEmbeddings(color);
+            PointStruct point = new()
+                                {
+                                    Id = (ulong)points.Count + 1,
+                                    Vectors = vectors,
+                                    Payload =
+                                    {
+                                        ["color"] = color, ["rand_number"] = (points.Count + 1) % 10
+                                    }
+                                };
+            points.Add(point);
+        }
 
-        await _client.UpsertAsync(CollectionName, points);
+        await _qdrantClient.UpsertAsync(CollectionName, points);
     }
 
     /// <summary>
     /// Searches for the most similar vectors to the query vector.
     /// </summary>
-    /// <param name="queryVector">The vector to search for similar vectors.</param>
+    /// <param name="color">The color to search for.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
-    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(
-        float[] queryVector) => await _client.SearchAsync(CollectionName,
-                                                          queryVector,
-                                                          limit: Limit);
+    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string color)
+    {
+        float[] queryVector = await _embeddingGenerateClient.GenerateVectorEmbeddings(color);
+
+        return await _qdrantClient.SearchAsync(CollectionName,
+                                               queryVector,
+                                               limit: Limit);
+    }
 
     /// <summary>
     /// Searches for the most similar vectors to the query vector with additional filtering conditions.
     /// </summary>
-    /// <param name="queryVector">The vector to search for similar vectors.</param>
+    /// <param name="color">The color to search for.</param>
     /// <param name="condition">The filtering condition to apply to the search.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
     public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(
-        float[] queryVector,
-        Condition condition) => await _client.SearchAsync(CollectionName,
-                                                          queryVector,
-                                                          filter: condition,
-                                                          limit: Limit);
+        string color,
+        Condition condition)
+    {
+        float[] queryVector = await _embeddingGenerateClient.GenerateVectorEmbeddings(color);
+
+        return await _qdrantClient.SearchAsync(CollectionName,
+                                               queryVector,
+                                               filter: condition,
+                                               limit: Limit);
+    }
 }

@@ -36,7 +36,8 @@
                     <li>Includes metadata: color="red" and a random number (0-9)</li>
                 </ul>
             </div>
-            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 @(_shouldDisableAddVectorsButton ? "cursor-not-allowed" : "")"
+                    disabled="@_shouldDisableAddVectorsButton"
                     @onclick="AddVectorsAsync">
                 Add
             </button>
@@ -58,7 +59,7 @@
                     Query Vector
                 </label>
                 <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                       @bind="QueryVectorString"/>
+                       @bind="Color"/>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Enter 100 comma-separated values between 0 and 1
                 </p>
@@ -140,32 +141,38 @@
 </div>
 
 @code {
-    private string QueryVectorString { get; set; } = "0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0";
+    private bool _shouldDisableAddVectorsButton = false;
+    private string Color { get; set; } = "Red";
     private int MinRandomNumber { get; set; } = 3;
     private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
 
-    async private Task AddVectorsAsync() => await VectorCollection.AddVectorsAsync();
-
-    async private Task SearchVectorsAsync()
+    private async Task AddVectorsAsync()
     {
-        float[] queryVector = QueryVectorString.Split(separator: ',')
-                                               .Select(float.Parse)
-                                               .ToArray();
+        _shouldDisableAddVectorsButton = !_shouldDisableAddVectorsButton;
+        try
+        {
+            await VectorCollection.AddVectorsAsync();
+        }
+        catch (Exception)
+        {
+            _shouldDisableAddVectorsButton = !_shouldDisableAddVectorsButton;
 
-        SearchResults = await VectorCollection.SearchAsync(queryVector);
+            throw;
+        }
     }
 
-    async private Task SearchWithFilterAsync()
+    private async Task SearchVectorsAsync()
     {
-        float[] queryVector = QueryVectorString.Split(separator: ',')
-                                               .Select(float.Parse)
-                                               .ToArray();
+        SearchResults = await VectorCollection.SearchAsync(Color);
+    }
 
+    private async Task SearchWithFilterAsync()
+    {
         Condition condition = new()
                               {
                                   Filter = Range(field: "rand_number", new Range { Gte = MinRandomNumber })
                               };
 
-        SearchResults = await VectorCollection.SearchAsync(queryVector, condition);
+        SearchResults = await VectorCollection.SearchAsync(Color, condition);
     }
 }

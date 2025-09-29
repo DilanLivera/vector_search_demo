@@ -7,21 +7,126 @@ namespace UI.Infrastructure.VectorCollections;
 /// <summary>
 /// Provides functionality for testing vector similarity search using Qdrant.
 /// </summary>
-public sealed class TestVectorCollection
+public sealed class ColorCollection
 {
-    private const string CollectionName = "test";
+    private const string CollectionName = "colors";
+
+    private static readonly List<string> Colors =
+    [
+        "Red",
+        "Scarlet",
+        "Crimson",
+        "Burgundy",
+        "Maroon",
+        "Ruby",
+        "Cerise",
+        "Carmine",
+        "Barn Red",
+        "Coral",
+        "Salmon",
+        "Pink",
+        "Hot Pink",
+        "Rose",
+        "Fuchsia",
+        "Magenta",
+        "Raspberry",
+        "Lavender Pink",
+        "Light Salmon",
+        "Dark Red",
+        "Orange",
+        "Dark Orange",
+        "Tangerine",
+        "Apricot",
+        "Peach",
+        "Gold",
+        "Yellow",
+        "Lemon",
+        "Canary",
+        "Chartreuse",
+        "Mustard",
+        "Saffron",
+        "Amber",
+        "Beige",
+        "Khaki",
+        "Cream",
+        "Papaya Whip",
+        "Corn",
+        "Citrine",
+        "Goldenrod",
+        "Green",
+        "Lime",
+        "Forest Green",
+        "Emerald",
+        "Jade",
+        "Sea Green",
+        "Mint",
+        "Olive",
+        "Sage",
+        "Hunter Green",
+        "Kelly Green",
+        "Spring Green",
+        "Dark Green",
+        "Aquamarine",
+        "Chartreuse Green",
+        "Moss Green",
+        "Pear",
+        "Shamrock Green",
+        "Teal Green",
+        "Artichoke Green",
+        "Blue",
+        "Navy",
+        "Royal Blue",
+        "Sapphire",
+        "Azure",
+        "Cerulean",
+        "Sky Blue",
+        "Baby Blue",
+        "Turquoise",
+        "Cyan",
+        "Teal",
+        "Indigo",
+        "Denim",
+        "Periwinkle",
+        "Powder Blue",
+        "Cadet Blue",
+        "Steel Blue",
+        "Midnight Blue",
+        "Cobalt",
+        "Electric Blue",
+        "Purple",
+        "Violet",
+        "Lavender",
+        "Plum",
+        "Lilac",
+        "Amethyst",
+        "Mauve",
+        "Thistle",
+        "Orchid",
+        "Byzantium",
+        "Black",
+        "White",
+        "Gray",
+        "Silver",
+        "Charcoal",
+        "Brown",
+        "Chocolate",
+        "Tan",
+        "Sepia",
+        "Ivory"
+    ];
+
     private readonly QdrantClient _qdrantClient;
-    private readonly VectorEmbeddingGenerateClient _embeddingGenerateClient;
+    private readonly TextVectorEmbeddingGenerateClient _embeddingGenerateClient;
     private const ulong Limit = 5; // the 5 closest points
 
-    public TestVectorCollection(QdrantClient qdrantClient, VectorEmbeddingGenerateClient embeddingGenerateClient)
+    public ColorCollection(QdrantClient qdrantClient, TextVectorEmbeddingGenerateClient embeddingGenerateClient)
     {
         _qdrantClient = qdrantClient;
         _embeddingGenerateClient = embeddingGenerateClient;
     }
 
     /// <summary>
-    /// Ensures the vector collection exists in Qdrant.
+    /// Ensures the vector collection exists in Qdrant with seed data.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
@@ -38,7 +143,7 @@ public sealed class TestVectorCollection
 
         VectorParams vectorsConfig = new()
                                      {
-                                         Size = 1024, // this should match the number of components in a vector
+                                         Size = 1024, // this should match the vector dimension of color
                                          Distance = Distance.Cosine
                                      };
         await _qdrantClient.CreateCollectionAsync(CollectionName, vectorsConfig);
@@ -47,120 +152,9 @@ public sealed class TestVectorCollection
         {
             throw new InvalidOperationException($"'{CollectionName}' collection not found");
         }
-    }
-
-    /// <summary>
-    /// Adds 100 random vectors to the collection.
-    /// </summary>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task AddVectorsAsync()
-    {
-        List<string> colors =
-        [
-            "Red",
-            "Scarlet",
-            "Crimson",
-            "Burgundy",
-            "Maroon",
-            "Ruby",
-            "Cerise",
-            "Carmine",
-            "Barn Red",
-            "Coral",
-            "Salmon",
-            "Pink",
-            "Hot Pink",
-            "Rose",
-            "Fuchsia",
-            "Magenta",
-            "Raspberry",
-            "Lavender Pink",
-            "Light Salmon",
-            "Dark Red",
-            "Orange",
-            "Dark Orange",
-            "Tangerine",
-            "Apricot",
-            "Peach",
-            "Gold",
-            "Yellow",
-            "Lemon",
-            "Canary",
-            "Chartreuse",
-            "Mustard",
-            "Saffron",
-            "Amber",
-            "Beige",
-            "Khaki",
-            "Cream",
-            "Papaya Whip",
-            "Corn",
-            "Citrine",
-            "Goldenrod",
-            "Green",
-            "Lime",
-            "Forest Green",
-            "Emerald",
-            "Jade",
-            "Sea Green",
-            "Mint",
-            "Olive",
-            "Sage",
-            "Hunter Green",
-            "Kelly Green",
-            "Spring Green",
-            "Dark Green",
-            "Aquamarine",
-            "Chartreuse Green",
-            "Moss Green",
-            "Pear",
-            "Shamrock Green",
-            "Teal Green",
-            "Artichoke Green",
-            "Blue",
-            "Navy",
-            "Royal Blue",
-            "Sapphire",
-            "Azure",
-            "Cerulean",
-            "Sky Blue",
-            "Baby Blue",
-            "Turquoise",
-            "Cyan",
-            "Teal",
-            "Indigo",
-            "Denim",
-            "Periwinkle",
-            "Powder Blue",
-            "Cadet Blue",
-            "Steel Blue",
-            "Midnight Blue",
-            "Cobalt",
-            "Electric Blue",
-            "Purple",
-            "Violet",
-            "Lavender",
-            "Plum",
-            "Lilac",
-            "Amethyst",
-            "Mauve",
-            "Thistle",
-            "Orchid",
-            "Byzantium",
-            "Black",
-            "White",
-            "Gray",
-            "Silver",
-            "Charcoal",
-            "Brown",
-            "Chocolate",
-            "Tan",
-            "Sepia",
-            "Ivory"
-        ];
 
         List<PointStruct> points = [];
-        foreach (string color in colors)
+        foreach (string color in Colors)
         {
             Vectors vectors = await _embeddingGenerateClient.GenerateVectorEmbeddings(color);
             PointStruct point = new()
@@ -198,9 +192,7 @@ public sealed class TestVectorCollection
     /// <param name="color">The color to search for.</param>
     /// <param name="condition">The filtering condition to apply to the search.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
-    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(
-        string color,
-        Condition condition)
+    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string color, Condition condition)
     {
         float[] queryVector = await _embeddingGenerateClient.GenerateVectorEmbeddings(color);
 

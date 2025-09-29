@@ -1,46 +1,23 @@
-@page "/vector-test"
-@inject TestVectorCollection VectorCollection
+@page "/"
 @rendermode InteractiveServer
+@inject ColorCollection Collection
 @using Qdrant.Client.Grpc
 @using Range=Qdrant.Client.Grpc.Range
 @using UI.Infrastructure.VectorCollections
 @using static Qdrant.Client.Grpc.Conditions
 
-<PageTitle>Vector Test</PageTitle>
+<PageTitle>Color Vector Collection</PageTitle>
 
-<div class="max-w-4xl mx-auto p-6">
+<div class="max-w-4xl mx-auto">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Vector Collection Test
+            Color Vector Collection
         </h1>
 
         <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
             <p class="text-sm">
-                This page demonstrates vector similarity search using Qdrant. Each vector has 100 dimensions and includes metadata (color and random number).
+                This page demonstrates vector similarity search using Qdrant. Each vector has 1024 dimensions and includes metadata (color and random number). The color collection is created and seeded during startup.
             </p>
-        </div>
-
-        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
-
-        <div class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Add Vectors
-            </h3>
-            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
-                <p class="text-sm">
-                    Click this button to populate the collection with 100 random vectors. Each vector:
-                </p>
-                <ul class="mt-2 text-sm list-disc list-inside">
-                    <li>Has 100 random float values between 0 and 1</li>
-                    <li>Has a unique ID from 1 to 100</li>
-                    <li>Includes metadata: color="red" and a random number (0-9)</li>
-                </ul>
-            </div>
-            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 @(_shouldDisableAddVectorsButton ? "cursor-not-allowed" : "")"
-                    disabled="@_shouldDisableAddVectorsButton"
-                    @onclick="AddVectorsAsync">
-                Add
-            </button>
         </div>
 
         <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
@@ -51,17 +28,17 @@
             </h3>
             <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
                 <p class="text-sm">
-                    Enter a query vector to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
+                    Enter a color to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
                 </p>
             </div>
             <div class="mb-4">
                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                    Query Vector
+                    Color
                 </label>
                 <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                       @bind="Color"/>
+                       @bind="SearchVectorsColor"/>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Enter 100 comma-separated values between 0 and 1
+                    Enter a text value to search
                 </p>
             </div>
             <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
@@ -78,7 +55,17 @@
             </h3>
             <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
                 <p class="text-sm">
-                    Search for similar vectors but only return those where the random number is greater than or equal to the specified value. This demonstrates how to combine vector similarity search with metadata filtering.
+                    Search for similar colors but only return those where the random number is greater than or equal to the specified value. This demonstrates how to combine vector similarity search with metadata filtering.
+                </p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Color
+                </label>
+                <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       @bind="FilteredSearchColor"/>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Enter a text value to search
                 </p>
             </div>
             <div class="mb-4">
@@ -87,7 +74,7 @@
                 </label>
                 <input type="number"
                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                       @bind="MinRandomNumber"/>
+                       @bind="FilteredSearchMinRandomNumber"/>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Enter a number between 0 and 9
                 </p>
@@ -111,7 +98,7 @@
                 <ul class="mt-2 text-sm list-disc list-inside">
                     <li>ID: The unique identifier of the vector</li>
                     <li>Score: Similarity score (0-1, higher means more similar)</li>
-                    <li>Color: Always "red" in this demo</li>
+                    <li>Color: Color Name</li>
                     <li>Random Number: A number between 0-9</li>
                 </ul>
             </div>
@@ -141,38 +128,23 @@
 </div>
 
 @code {
-    private bool _shouldDisableAddVectorsButton = false;
-    private string Color { get; set; } = "Red";
-    private int MinRandomNumber { get; set; } = 3;
+    private string SearchVectorsColor { get; set; } = "Red";
+    private string FilteredSearchColor { get; set; } = "Yellow";
+    private int FilteredSearchMinRandomNumber { get; set; } = 3;
     private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
-
-    private async Task AddVectorsAsync()
-    {
-        _shouldDisableAddVectorsButton = !_shouldDisableAddVectorsButton;
-        try
-        {
-            await VectorCollection.AddVectorsAsync();
-        }
-        catch (Exception)
-        {
-            _shouldDisableAddVectorsButton = !_shouldDisableAddVectorsButton;
-
-            throw;
-        }
-    }
 
     private async Task SearchVectorsAsync()
     {
-        SearchResults = await VectorCollection.SearchAsync(Color);
+        SearchResults = await Collection.SearchAsync(SearchVectorsColor);
     }
 
     private async Task SearchWithFilterAsync()
     {
         Condition condition = new()
                               {
-                                  Filter = Range(field: "rand_number", new Range { Gte = MinRandomNumber })
+                                  Filter = Range(field: "rand_number", new Range { Gte = FilteredSearchMinRandomNumber })
                               };
 
-        SearchResults = await VectorCollection.SearchAsync(Color, condition);
+        SearchResults = await Collection.SearchAsync(FilteredSearchColor, condition);
     }
 }

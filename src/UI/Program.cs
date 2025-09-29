@@ -15,9 +15,9 @@ builder.Services.AddApplicationAuth(builder.Configuration);
 
 builder.Services.AddAuthorizationCore();
 
-builder.Services.AddHttpClient<VectorEmbeddingGenerateClient>();
+builder.Services.AddHttpClient<TextVectorEmbeddingGenerateClient>();
 
-builder.Services.AddSingleton<TestVectorCollection>();
+builder.Services.AddSingleton<ColorCollection>();
 builder.Services.AddSingleton<QdrantClient>(_ => new QdrantClient(host: "localhost",
                                                                   port: 6334,
                                                                   apiKey: null,
@@ -27,8 +27,8 @@ WebApplication app = builder.Build();
 
 using (IServiceScope scope = app.Services.CreateScope())
 {
-    TestVectorCollection testVectorCollection = scope.ServiceProvider.GetRequiredService<TestVectorCollection>();
-    await testVectorCollection.InitializeAsync();
+    ColorCollection collection = scope.ServiceProvider.GetRequiredService<ColorCollection>();
+    await collection.InitializeAsync();
 }
 
 if (!app.Environment.IsDevelopment())

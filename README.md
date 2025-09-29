@@ -40,6 +40,11 @@ This is a demo application for vector search.
 qdrant dashboard: http://localhost:6333/dashboard
 aspire dashboard: http://localhost:18888
 
+1. Start Qdrant and Ollama docker containers using the `docker-compose up qdrant ollama` command.
+2. If the model does not exist, use the `'docker exec -it ollama ollama pull mxbai-embed-large:335m'` command to pull the model.
+3. Run the application. Please note that the application may take a few seconds to start, as the collection is created and seeded during startup.
+4. Enter a text value to search.
+
 ## Resources
 
 - [Add Auth0 Authentication to Blazor Web Apps](https://auth0.com/blog/auth0-authentication-blazor-web-apps/)

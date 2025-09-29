@@ -1,6 +1,7 @@
 using Qdrant.Client;
 using UI.Components;
 using UI.Infrastructure;
+using UI.Infrastructure.VectorCollections;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

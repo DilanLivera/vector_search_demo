@@ -1,7 +1,7 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 
-namespace UI.Infrastructure.VectorCollections;
+namespace UI.Infrastructure;
 
 // please refer to the https://github.com/qdrant/qdrant-dotnet for details.
 /// <summary>

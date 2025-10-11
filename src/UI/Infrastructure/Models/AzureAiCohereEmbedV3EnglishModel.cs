@@ -3,20 +3,20 @@ using System.Text.Json;
 using Azure;
 using Azure.AI.Inference;
 
-namespace UI.Infrastructure;
+namespace UI.Infrastructure.Models;
 
 
 // depends on the Azure.AI.Inference(pre-release) package
 // https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/how-to/use-image-embeddings?pivots=programming-language-csharp
-public sealed class CohereEmbedV3EnglishClient
+public sealed class AzureAiCohereEmbedV3EnglishModel
 {
     private readonly string _imageEmbeddingClientBaseUrl;
-    private readonly ILogger<CohereEmbedV3EnglishClient> _logger;
+    private readonly ILogger<AzureAiCohereEmbedV3EnglishModel> _logger;
     private readonly ImageEmbeddingsClient _client;
 
-    public CohereEmbedV3EnglishClient(
+    public AzureAiCohereEmbedV3EnglishModel(
         IConfiguration configuration,
-        ILogger<CohereEmbedV3EnglishClient> logger)
+        ILogger<AzureAiCohereEmbedV3EnglishModel> logger)
     {
         _logger = logger;
 

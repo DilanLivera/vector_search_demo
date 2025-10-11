@@ -117,13 +117,13 @@ public sealed class ColorCollection
     ];
 
     private readonly QdrantClient _qdrantClient;
-    private readonly MxbaiEmbedLargeClient _mxbaiEmbedLargeClient;
+    private readonly OllamaMxbaiEmbedLargeModel _model;
     private const ulong Limit = 5; // the 5 closest points
 
-    public ColorCollection(QdrantClient qdrantClient, MxbaiEmbedLargeClient mxbaiEmbedLargeClient)
+    public ColorCollection(QdrantClient qdrantClient, OllamaMxbaiEmbedLargeModel model)
     {
         _qdrantClient = qdrantClient;
-        _mxbaiEmbedLargeClient = mxbaiEmbedLargeClient;
+        _model = model;
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public sealed class ColorCollection
         List<PointStruct> points = [];
         foreach (string color in Colors)
         {
-            Vectors vectors = await _mxbaiEmbedLargeClient.GenerateTextVectorEmbeddingsAsync(color);
+            Vectors vectors = await _model.GenerateTextVectorEmbeddingsAsync(color);
             PointStruct point = new()
                                 {
                                     Id = (ulong)points.Count + 1,
@@ -180,7 +180,7 @@ public sealed class ColorCollection
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
     public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string color)
     {
-        float[] queryVector = await _mxbaiEmbedLargeClient.GenerateTextVectorEmbeddingsAsync(color);
+        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(color);
 
         return await _qdrantClient.SearchAsync(CollectionName,
                                                queryVector,
@@ -195,7 +195,7 @@ public sealed class ColorCollection
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
     public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string color, Condition condition)
     {
-        float[] queryVector = await _mxbaiEmbedLargeClient.GenerateTextVectorEmbeddingsAsync(color);
+        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(color);
 
         return await _qdrantClient.SearchAsync(CollectionName,
                                                queryVector,

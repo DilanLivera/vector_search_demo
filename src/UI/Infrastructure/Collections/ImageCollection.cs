@@ -1,12 +1,13 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using UI.Infrastructure.Models;
 
 namespace UI.Infrastructure.Collections;
 
 public sealed class ImageCollection
 {
     private readonly ILogger<ImageCollection> _logger;
-    private readonly CohereEmbedV3EnglishClient _embeddingGenerateClient;
+    private readonly AzureAiCohereEmbedV3EnglishModel _model;
     private const string CollectionName = "images";
 
     private readonly List<string> _images = ["dogs.jpeg", "elephant.jpeg", "parrot.jpeg", "tiger.jpg"];
@@ -17,11 +18,11 @@ public sealed class ImageCollection
 
     public ImageCollection(
         ILogger<ImageCollection> logger,
-        CohereEmbedV3EnglishClient embeddingGenerateClient,
+        AzureAiCohereEmbedV3EnglishModel model,
         QdrantClient qdrantClient)
     {
         _logger = logger;
-        _embeddingGenerateClient = embeddingGenerateClient;
+        _model = model;
         _qdrantClient = qdrantClient;
 
     }
@@ -71,7 +72,7 @@ public sealed class ImageCollection
 
                 string imageFormat = Path.GetExtension(imageFilePath);
 
-                Vectors vectors = await _embeddingGenerateClient.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
+                Vectors vectors = await _model.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
 
                 PointStruct point = new()
                                     {

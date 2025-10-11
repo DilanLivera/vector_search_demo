@@ -1,16 +1,16 @@
 namespace UI.Infrastructure.Models;
 
 /// <summary>
-/// A client for generating vector embeddings using locally hosted 'mxbai-embed-large' model.
+/// Ollama hosted 'mxbai-embed-large' model for generating vector embeddings.
 /// </summary>
 /// <remarks>
 /// This client converts text input into numerical vector representations.
 /// </remarks>
-public sealed class MxbaiEmbedLargeClient
+public sealed class OllamaMxbaiEmbedLargeModel
 {
     private readonly HttpClient _client;
 
-    public MxbaiEmbedLargeClient(HttpClient client) => _client = client;
+    public OllamaMxbaiEmbedLargeModel(HttpClient client) => _client = client;
 
     /// <summary>
     /// Generates a vector embedding for the specified input text.

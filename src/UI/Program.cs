@@ -16,8 +16,8 @@ builder.Services.AddApplicationAuth(builder.Configuration);
 
 builder.Services.AddAuthorizationCore();
 
-builder.Services.AddHttpClient<MxbaiEmbedLargeClient>();
-builder.Services.AddSingleton<CohereEmbedV3EnglishClient>();
+builder.Services.AddHttpClient<OllamaMxbaiEmbedLargeModel>();
+builder.Services.AddSingleton<AzureAiCohereEmbedV3EnglishModel>();
 
 builder.Services.AddSingleton<ColorCollection>();
 builder.Services.AddSingleton<ImageCollection>();

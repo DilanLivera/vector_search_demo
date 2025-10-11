@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Qdrant.Client;
+using Qdrant.Client.Grpc;
 using UI.Components;
 using UI.Infrastructure;
 using UI.Infrastructure.Collections;
@@ -36,6 +38,10 @@ using (IServiceScope scope = app.Services.CreateScope())
 
     ImageCollection imageCollection = scope.ServiceProvider.GetRequiredService<ImageCollection>();
     await imageCollection.InitializeAsync();
+
+    // todo: remove after page for search is created
+    // IReadOnlyList<ScoredPoint> result = await imageCollection.SearchAsync(text: "flying");
+    // Debug.Assert(result.Count > 1, message: "results must be more than 1");
 }
 
 if (!app.Environment.IsDevelopment())

@@ -90,4 +90,18 @@ public sealed class ImageCollection
 
         await _qdrantClient.UpsertAsync(CollectionName, points);
     }
+
+    /// <summary>
+    /// Searches for the most similar vectors to the query vector.
+    /// </summary>
+    /// <param name="text">The text to search for.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
+    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string text)
+    {
+        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(text);
+
+        return await _qdrantClient.SearchAsync(CollectionName,
+                                               queryVector,
+                                               limit: Limit);
+    }
 }

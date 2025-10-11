@@ -6,7 +6,7 @@ namespace UI.Infrastructure;
 public sealed class ImageCollection
 {
     private readonly ILogger<ImageCollection> _logger;
-    private readonly ImageVectorEmbeddingGenerateClient _embeddingGenerateClient;
+    private readonly CohereEmbedV3EnglishClient _embeddingGenerateClient;
     private const string CollectionName = "images";
 
     private readonly List<string> _images = ["dogs.jpeg", "elephant.jpeg", "parrot.jpeg", "tiger.jpg"];
@@ -17,7 +17,7 @@ public sealed class ImageCollection
 
     public ImageCollection(
         ILogger<ImageCollection> logger,
-        ImageVectorEmbeddingGenerateClient embeddingGenerateClient,
+        CohereEmbedV3EnglishClient embeddingGenerateClient,
         QdrantClient qdrantClient)
     {
         _logger = logger;
@@ -71,7 +71,7 @@ public sealed class ImageCollection
 
                 string imageFormat = Path.GetExtension(imageFilePath);
 
-                Vectors vectors = await _embeddingGenerateClient.GenerateVectorEmbeddings(imageFilePath, imageFormat);
+                Vectors vectors = await _embeddingGenerateClient.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
 
                 PointStruct point = new()
                                     {

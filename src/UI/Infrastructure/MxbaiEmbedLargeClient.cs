@@ -1,16 +1,16 @@
 namespace UI.Infrastructure;
 
 /// <summary>
-/// A client for generating vector embeddings.
+/// A client for generating vector embeddings using locally hosted 'mxbai-embed-large' model.
 /// </summary>
 /// <remarks>
 /// This client converts text input into numerical vector representations.
 /// </remarks>
-public sealed class TextVectorEmbeddingGenerateClient
+public sealed class MxbaiEmbedLargeClient
 {
     private readonly HttpClient _client;
 
-    public TextVectorEmbeddingGenerateClient(HttpClient client) => _client = client;
+    public MxbaiEmbedLargeClient(HttpClient client) => _client = client;
 
     /// <summary>
     /// Generates a vector embedding for the specified input text.
@@ -27,7 +27,7 @@ public sealed class TextVectorEmbeddingGenerateClient
     /// </remarks>
     /// <exception cref="HttpRequestException">Thrown if the API request does not return a success status code.</exception>
     /// <exception cref="InvalidOperationException">Thrown if the response from the API cannot be deserialized correctly.</exception>
-    public async Task<float[]> GenerateVectorEmbeddings(string input)
+    public async Task<float[]> GenerateTextVectorEmbeddingsAsync(string input)
     {
         VectorEmbeddingsGenerateRequest request = new(input);
         HttpResponseMessage responseMessage = await _client.PostAsJsonAsync(requestUri: "http://localhost:11434/api/embed", request);

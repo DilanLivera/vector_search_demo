@@ -6,17 +6,17 @@ using Azure.AI.Inference;
 namespace UI.Infrastructure;
 
 
-// depends on the Azure.AI.Inference(pre-release) packagesssssss
+// depends on the Azure.AI.Inference(pre-release) package
 // https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/how-to/use-image-embeddings?pivots=programming-language-csharp
-public sealed class ImageVectorEmbeddingGenerateClient
+public sealed class CohereEmbedV3EnglishClient
 {
     private readonly string _imageEmbeddingClientBaseUrl;
-    private readonly ILogger<ImageVectorEmbeddingGenerateClient> _logger;
+    private readonly ILogger<CohereEmbedV3EnglishClient> _logger;
     private readonly ImageEmbeddingsClient _client;
 
-    public ImageVectorEmbeddingGenerateClient(
+    public CohereEmbedV3EnglishClient(
         IConfiguration configuration,
-        ILogger<ImageVectorEmbeddingGenerateClient> logger)
+        ILogger<CohereEmbedV3EnglishClient> logger)
     {
         _logger = logger;
 
@@ -27,7 +27,7 @@ public sealed class ImageVectorEmbeddingGenerateClient
                                             new AzureKeyCredential(azureInferenceCredential));
     }
 
-    public async Task<float[]> GenerateVectorEmbeddings(string imageFilePath, string imageFormat)
+    public async Task<float[]> GenerateImageVectorEmbeddingsAsync(string imageFilePath, string imageFormat)
     {
         List<ImageEmbeddingInput> input = [ImageEmbeddingInput.Load(imageFilePath, imageFormat)];
 

@@ -14,10 +14,10 @@ builder.Services.AddApplicationAuth(builder.Configuration);
 
 builder.Services.AddAuthorizationCore();
 
-builder.Services.AddHttpClient<TextVectorEmbeddingGenerateClient>();
-builder.Services.AddSingleton<ColorCollection>();
+builder.Services.AddHttpClient<MxbaiEmbedLargeClient>();
+builder.Services.AddSingleton<CohereEmbedV3EnglishClient>();
 
-builder.Services.AddSingleton<ImageVectorEmbeddingGenerateClient>();
+builder.Services.AddSingleton<ColorCollection>();
 builder.Services.AddSingleton<ImageCollection>();
 
 builder.Services.AddSingleton<QdrantClient>(_ => new QdrantClient(host: "localhost",

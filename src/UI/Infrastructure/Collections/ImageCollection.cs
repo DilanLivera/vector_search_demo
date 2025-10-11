@@ -29,66 +29,73 @@ public sealed class ImageCollection
 
     public async Task InitializeAsync()
     {
-        if (await _qdrantClient.CollectionExistsAsync(CollectionName))
+        try
         {
-            await _qdrantClient.DeleteCollectionAsync(CollectionName);
-
             if (await _qdrantClient.CollectionExistsAsync(CollectionName))
             {
-                throw new InvalidOperationException($"Failed to delete '{CollectionName}'");
-            }
-        }
+                await _qdrantClient.DeleteCollectionAsync(CollectionName);
 
-        VectorParams vectorsParams = new()
-                                     {
-                                         Size = 1024, // this should match the vector dimension of image
-                                         Distance = Distance.Cosine
-                                     };
-        await _qdrantClient.CreateCollectionAsync(CollectionName, vectorsParams);
-
-        if (!await _qdrantClient.CollectionExistsAsync(CollectionName))
-        {
-            throw new InvalidOperationException($"'{CollectionName}' collection not found");
-        }
-
-        List<PointStruct> points = [];
-        foreach (string image in _images)
-        {
-            KeyValuePair<string, object> logState = new("Image", image);
-            using (_logger.BeginScope(logState))
-            {
-                string imageFilePath = Path.Combine(ImageDirectoryPath, image);
-
-                _logger.LogDebug("Loading '{ImageFilePath}' image", imageFilePath);
-
-                if (!File.Exists(imageFilePath))
+                if (await _qdrantClient.CollectionExistsAsync(CollectionName))
                 {
-                    _logger.LogWarning("'{ImageName}' image does not exist in the '{ImageDirectoryPath}' directory.",
-                                       image,
-                                       ImageDirectoryPath);
-
-                    continue;
+                    throw new InvalidOperationException($"Failed to delete '{CollectionName}'");
                 }
-
-                string imageFormat = Path.GetExtension(imageFilePath);
-
-                Vectors vectors = await _model.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
-
-                PointStruct point = new()
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        Vectors = vectors,
-                                        Payload =
-                                        {
-                                            ["image"] = image, ["format"] = imageFormat, ["createdAtUtc"] = DateTimeOffset.UtcNow.ToString()
-                                        }
-                                    };
-
-                points.Add(point);
             }
-        }
 
-        await _qdrantClient.UpsertAsync(CollectionName, points);
+            VectorParams vectorsParams = new()
+                                         {
+                                             Size = 1024, // this should match the vector dimension of image
+                                             Distance = Distance.Cosine
+                                         };
+            await _qdrantClient.CreateCollectionAsync(CollectionName, vectorsParams);
+
+            if (!await _qdrantClient.CollectionExistsAsync(CollectionName))
+            {
+                throw new InvalidOperationException($"'{CollectionName}' collection not found");
+            }
+
+            List<PointStruct> points = [];
+            foreach (string image in _images)
+            {
+                KeyValuePair<string, object> logState = new("Image", image);
+                using (_logger.BeginScope(logState))
+                {
+                    string imageFilePath = Path.Combine(ImageDirectoryPath, image);
+
+                    _logger.LogDebug("Loading '{ImageFilePath}' image", imageFilePath);
+
+                    if (!File.Exists(imageFilePath))
+                    {
+                        _logger.LogWarning("'{ImageName}' image does not exist in the '{ImageDirectoryPath}' directory.",
+                                           image,
+                                           ImageDirectoryPath);
+
+                        continue;
+                    }
+
+                    string imageFormat = Path.GetExtension(imageFilePath);
+
+                    Vectors vectors = await _model.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
+
+                    PointStruct point = new()
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            Vectors = vectors,
+                                            Payload =
+                                            {
+                                                ["image"] = image, ["format"] = imageFormat, ["createdAtUtc"] = DateTimeOffset.UtcNow.ToString()
+                                            }
+                                        };
+
+                    points.Add(point);
+                }
+            }
+
+            await _qdrantClient.UpsertAsync(CollectionName, points);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to initialize {CollectionName}", nameof(ColorCollection));
+        }
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-namespace UI.Infrastructure;
+namespace UI.Infrastructure.Models;
 
 /// <summary>
 /// A client for generating vector embeddings using locally hosted 'mxbai-embed-large' model.

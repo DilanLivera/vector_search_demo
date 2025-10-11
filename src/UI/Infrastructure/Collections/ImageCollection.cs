@@ -1,7 +1,7 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 
-namespace UI.Infrastructure;
+namespace UI.Infrastructure.Collections;
 
 public sealed class ImageCollection
 {

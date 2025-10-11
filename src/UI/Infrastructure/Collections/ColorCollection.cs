@@ -1,7 +1,8 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using UI.Infrastructure.Models;
 
-namespace UI.Infrastructure;
+namespace UI.Infrastructure.Collections;
 
 // please refer to the https://github.com/qdrant/qdrant-dotnet for details.
 /// <summary>

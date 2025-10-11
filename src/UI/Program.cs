@@ -1,6 +1,8 @@
 using Qdrant.Client;
 using UI.Components;
 using UI.Infrastructure;
+using UI.Infrastructure.Collections;
+using UI.Infrastructure.Models;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

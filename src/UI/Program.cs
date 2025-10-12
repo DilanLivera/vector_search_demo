@@ -51,14 +51,32 @@ builder.Services.AddScoped<EmbeddingsClient>(sp =>
 
 WebApplication app = builder.Build();
 
-using (IServiceScope scope = app.Services.CreateScope())
+_ = Task.Run(async () =>
 {
-    ColorCollection colorCollection = scope.ServiceProvider.GetRequiredService<ColorCollection>();
-    await colorCollection.InitializeAsync();
+    using (IServiceScope scope = app.Services.CreateScope())
+    {
+        ILogger<Program> logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        using (logger.BeginScope("Starting collection initialization..."))
+        {
+            try
+            {
+                ColorCollection colorCollection = scope.ServiceProvider.GetRequiredService<ColorCollection>();
+                await colorCollection.InitializeAsync();
 
-    ImageCollection imageCollection = scope.ServiceProvider.GetRequiredService<ImageCollection>();
-    await imageCollection.InitializeAsync();
-}
+                logger.LogDebug("'{CollectionName}' collection initialization completed successfully", nameof(ColorCollection));
+
+                ImageCollection imageCollection = scope.ServiceProvider.GetRequiredService<ImageCollection>();
+                await imageCollection.InitializeAsync();
+
+                logger.LogDebug("'{CollectionName}' collection initialization completed successfully", nameof(ImageCollection));
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Collection initialization failed");
+            }
+        }
+    }
+});
 
 if (!app.Environment.IsDevelopment())
 {

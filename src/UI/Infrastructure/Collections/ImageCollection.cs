@@ -1,11 +1,13 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using UI.Components.Pages;
 using UI.Infrastructure.Models;
 
 namespace UI.Infrastructure.Collections;
 
 public sealed class ImageCollection
 {
+    private readonly CollectionInitializationStatusManager _statusManager;
     private readonly ILogger<ImageCollection> _logger;
     private readonly AzureAiCohereEmbedV3EnglishModel _model;
     private const string CollectionName = "images";
@@ -17,10 +19,12 @@ public sealed class ImageCollection
     private const ulong Limit = 5; // the 5 closest points
 
     public ImageCollection(
+        CollectionInitializationStatusManager statusManager,
         ILogger<ImageCollection> logger,
         AzureAiCohereEmbedV3EnglishModel model,
         QdrantClient qdrantClient)
     {
+        _statusManager = statusManager;
         _logger = logger;
         _model = model;
         _qdrantClient = qdrantClient;
@@ -31,6 +35,8 @@ public sealed class ImageCollection
     {
         try
         {
+            _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.InProgress);
+
             if (await _qdrantClient.CollectionExistsAsync(CollectionName))
             {
                 await _qdrantClient.DeleteCollectionAsync(CollectionName);
@@ -94,10 +100,16 @@ public sealed class ImageCollection
             }
 
             await _qdrantClient.UpsertAsync(CollectionName, points);
+
+            _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.Completed);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Failed to initialize {CollectionName}", nameof(ColorCollection));
+            _logger.LogError(exception, "Failed to initialize '{CollectionName}'", nameof(ImageCollection));
+
+            _statusManager.SetCollectionStatus(nameof(ImageCollection),
+                                     InitializationStatus.Failed,
+                                     errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
         }
     }
 

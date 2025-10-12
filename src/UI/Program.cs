@@ -2,6 +2,7 @@ using Azure;
 using Azure.AI.Inference;
 using Qdrant.Client;
 using UI.Components;
+using UI.Components.Pages;
 using UI.Infrastructure;
 using UI.Infrastructure.Collections;
 using UI.Infrastructure.Models;
@@ -48,6 +49,8 @@ builder.Services.AddScoped<EmbeddingsClient>(sp =>
     return new EmbeddingsClient(new Uri(serviceEndpoint),
                                 new AzureKeyCredential(azureInferenceCredential));
 });
+
+builder.Services.AddSingleton<CollectionInitializationStatusManager>();
 
 WebApplication app = builder.Build();
 

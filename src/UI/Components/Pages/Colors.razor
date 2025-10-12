@@ -1,6 +1,7 @@
 @page "/"
 @rendermode InteractiveServer
 @inject ColorCollection Collection
+@inject CollectionInitializationStatusManager StatusManager
 @using Qdrant.Client.Grpc
 @using UI.Infrastructure.Collections
 @using Range=Qdrant.Client.Grpc.Range
@@ -11,7 +12,51 @@
 <div class="max-w-4xl mx-auto">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Color Vector Collection
+            <span>Color Vector Collection</span>
+
+            <span class="inline-flex items-center gap-0 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden text-base font-small">
+                <span class="px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">Loading:
+
+                    @switch (_collectionInitializationInfo.Status)
+                    {
+                        case InitializationStatus.InProgress:
+                            <span class="inline-flex items-center gap-2 px-1.5 py-1 bg-blue-500 text-white rounded-md">
+                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>@InitializationStatus.InProgress</span>
+                            </span>
+
+                            break;
+                        case InitializationStatus.Completed:
+                            <span class="inline-flex items-center gap-2 px-1.5 py-1 bg-green-500 text-white rounded-md">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>@InitializationStatus.Completed</span>
+                            </span>
+
+                            break;
+                        case InitializationStatus.Failed:
+                            <span class="inline-flex items-center gap-2 px-1.5 py-1 bg-red-500 text-white rounded-md">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                <span>@InitializationStatus.Failed</span>
+                            </span>
+
+                            break;
+                        default:
+                            <span class="inline-flex items-center gap-2 px-1.5 py-1 bg-gray-400 text-white rounded-lg">
+                                <span>@InitializationStatus.NotStarted</span>
+                            </span>
+
+                            break;
+                    }
+                </span>
+
+            </span>
         </h1>
 
         <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
@@ -132,6 +177,26 @@
     private string FilteredSearchColor { get; set; } = "Yellow";
     private int FilteredSearchMinRandomNumber { get; set; } = 3;
     private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
+
+    private CollectionInitializationInfo _collectionInitializationInfo = new(nameof(ColorCollection)); // this is initialized to avoid the null warning
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _collectionInitializationInfo = StatusManager.GetCollectionInitializationInfo(nameof(ColorCollection));
+
+        StatusManager.CollectionStatusChanged += OnCollectionStatusChanged;
+    }
+
+    private void OnCollectionStatusChanged(object? sender, CollectionInitializationInfo info)
+    {
+        InvokeAsync(() =>
+        {
+            _collectionInitializationInfo = info;
+            StateHasChanged();
+        });
+    }
 
     private async Task SearchVectorsAsync()
     {

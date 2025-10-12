@@ -1,5 +1,6 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using UI.Components.Pages;
 using UI.Infrastructure.Models;
 
 namespace UI.Infrastructure.Collections;
@@ -116,16 +117,19 @@ public sealed class ColorCollection
         "Ivory"
     ];
 
+    private readonly CollectionInitializationStatusManager _statusManager;
     private readonly ILogger<ColorCollection> _logger;
     private readonly QdrantClient _qdrantClient;
     private readonly OllamaMxbaiEmbedLargeModel _model;
     private const ulong Limit = 5; // the 5 closest points
 
     public ColorCollection(
+        CollectionInitializationStatusManager statusManager,
         ILogger<ColorCollection> logger,
         OllamaMxbaiEmbedLargeModel model,
         QdrantClient qdrantClient)
     {
+        _statusManager = statusManager;
         _logger = logger;
         _qdrantClient = qdrantClient;
         _model = model;
@@ -139,6 +143,8 @@ public sealed class ColorCollection
     {
         try
         {
+            _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.InProgress);
+
             if (await _qdrantClient.CollectionExistsAsync(CollectionName))
             {
                 await _qdrantClient.DeleteCollectionAsync(CollectionName);
@@ -178,10 +184,16 @@ public sealed class ColorCollection
             }
 
             await _qdrantClient.UpsertAsync(CollectionName, points);
+
+            _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.Completed);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Failed to initialize {CollectionName}", nameof(ImageCollection));
+            _logger.LogError(exception, "Failed to initialize '{CollectionName}'", nameof(ImageCollection));
+
+            _statusManager.SetCollectionStatus(nameof(ColorCollection),
+                                     InitializationStatus.Failed,
+                                     errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
         }
     }
 

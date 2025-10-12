@@ -1,3 +1,5 @@
+using Azure;
+using Azure.AI.Inference;
 using Qdrant.Client;
 using UI.Components;
 using UI.Infrastructure;
@@ -17,15 +19,35 @@ builder.Services.AddApplicationAuth(builder.Configuration);
 builder.Services.AddAuthorizationCore();
 
 builder.Services.AddHttpClient<OllamaMxbaiEmbedLargeModel>();
-builder.Services.AddSingleton<AzureAiCohereEmbedV3EnglishModel>();
+builder.Services.AddScoped<AzureAiCohereEmbedV3EnglishModel>();
 
-builder.Services.AddSingleton<ColorCollection>();
-builder.Services.AddSingleton<ImageCollection>();
+builder.Services.AddScoped<ColorCollection>();
+builder.Services.AddScoped<ImageCollection>();
 
-builder.Services.AddSingleton<QdrantClient>(_ => new QdrantClient(host: "localhost",
-                                                                  port: 6334,
-                                                                  apiKey: null,
-                                                                  https: false));
+builder.Services.AddScoped<QdrantClient>(_ => new QdrantClient(host: "localhost",
+                                                               port: 6334,
+                                                               apiKey: null,
+                                                               https: false));
+
+builder.Services.AddScoped<ImageEmbeddingsClient>(sp =>
+{
+    IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+    string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw new InvalidOperationException("'AzureInference:Credential' configuration is not set");
+    string serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw new InvalidOperationException("'AzureInference:Endpoint' configuration is not set");
+
+    return new ImageEmbeddingsClient(new Uri(serviceEndpoint),
+                                     new AzureKeyCredential(azureInferenceCredential));
+});
+
+builder.Services.AddScoped<EmbeddingsClient>(sp =>
+{
+    IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+    string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw new InvalidOperationException("'AzureInference:Credential' configuration is not set");
+    string serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw new InvalidOperationException("'AzureInference:Endpoint' configuration is not set");
+
+    return new EmbeddingsClient(new Uri(serviceEndpoint),
+                                new AzureKeyCredential(azureInferenceCredential));
+});
 
 WebApplication app = builder.Build();
 

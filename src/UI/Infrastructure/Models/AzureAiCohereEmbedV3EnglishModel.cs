@@ -9,25 +9,18 @@ namespace UI.Infrastructure.Models;
 // https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/how-to/use-image-embeddings?pivots=programming-language-csharp
 public sealed class AzureAiCohereEmbedV3EnglishModel
 {
-    private readonly string _serviceEndpoint;
     private readonly ILogger<AzureAiCohereEmbedV3EnglishModel> _logger;
     private readonly ImageEmbeddingsClient _imageEmbeddingsClient;
     private readonly EmbeddingsClient _embeddingsClient;
 
     public AzureAiCohereEmbedV3EnglishModel(
-        IConfiguration configuration,
-        ILogger<AzureAiCohereEmbedV3EnglishModel> logger)
+        EmbeddingsClient embeddingsClient,
+        ILogger<AzureAiCohereEmbedV3EnglishModel> logger,
+        ImageEmbeddingsClient imageEmbeddingsClient)
     {
         _logger = logger;
-
-        string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw new InvalidOperationException("'AzureInference:Credential' configuration is not set");
-        _serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw new InvalidOperationException("'AzureInference:BaseUrl' configuration is not set");
-
-        _imageEmbeddingsClient = new ImageEmbeddingsClient(new Uri(_serviceEndpoint),
-                                                           new AzureKeyCredential(azureInferenceCredential));
-
-        _embeddingsClient = new EmbeddingsClient(new Uri(_serviceEndpoint),
-                                                 new AzureKeyCredential(azureInferenceCredential));
+        _imageEmbeddingsClient = imageEmbeddingsClient;
+        _embeddingsClient = embeddingsClient;
     }
 
     public async Task<float[]> GenerateImageVectorEmbeddingsAsync(string imageFilePath, string imageFormat)
@@ -43,10 +36,7 @@ public sealed class AzureAiCohereEmbedV3EnglishModel
         {
             Response<EmbeddingsResult> response = await _imageEmbeddingsClient.EmbedAsync(requestOptions);
 
-            _logger.LogDebug("Embedding {EmbeddingsResponse}, BaseUrl: {AzureInferenceServiceEndpoint}, Path: {AzureInferenceEmbeddingPath}",
-                             JsonSerializer.Serialize(response),
-                             _serviceEndpoint,
-                             "/images/embeddings");
+            _logger.LogDebug("Embedding Response: {EmbeddingsResponse}", JsonSerializer.Serialize(response));
 
             float[][] embeddings = response.Value
                                            .Data
@@ -77,10 +67,7 @@ public sealed class AzureAiCohereEmbedV3EnglishModel
         {
             Response<EmbeddingsResult> response = await _embeddingsClient.EmbedAsync(requestOptions);
 
-            _logger.LogDebug("Embedding {EmbeddingsResponse}, BaseUrl: {AzureInferenceServiceEndpoint}, Path: {AzureInferenceEmbeddingPath}",
-                             JsonSerializer.Serialize(response),
-                             _serviceEndpoint,
-                             "/embeddings");
+            _logger.LogDebug("Embedding Response: {EmbeddingsResponse}", JsonSerializer.Serialize(response));
 
             float[][] embeddings = response.Value
                                            .Data

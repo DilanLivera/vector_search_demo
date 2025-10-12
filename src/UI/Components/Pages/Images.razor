@@ -97,7 +97,7 @@
                     <li>ID: The unique identifier of the vector</li>
                     <li>Score: Similarity score (0-1, higher means more similar)</li>
                     <li>Image: Image</li>
-                    <li>Image Name: Image Name</li>
+                    <li>Image Name: Image name</li>
                 </ul>
             </div>
             <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -115,8 +115,10 @@
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         <td class="px-6 py-4">@result.Id.Uuid</td>
                         <td class="px-6 py-4">@result.Score</td>
-                        <td class="px-6 py-4">@result.Payload["image"].StringValue</td>
-                        <td class="px-6 py-4">@result.Payload["image"].StringValue</td>
+                        <td class="px-6 py-4"><img src="@GetImageDataUri(result.Payload["image_in_base64_string"].StringValue, result.Payload["image_name"].StringValue)"
+                                                   alt="@result.Payload["image_name"].StringValue"
+                                                   class="max-w-32 max-h-32 object-contain"/></td>
+                        <td class="px-6 py-4">@result.Payload["image_name"].StringValue</td>
                     </tr>
                 }
                 </tbody>
@@ -140,9 +142,24 @@
     {
         Condition condition = new()
                               {
-                                  Filter = MatchText(field: "image", text: FilteredSearchImageName)
+                                  Filter = MatchText(field: "image_name", text: FilteredSearchImageName)
                               };
 
         SearchResults = await Collection.SearchAsync(FilteredSearchText, condition);
+    }
+
+    private string GetImageDataUri(string imageInBase64String, string imageName)
+    {
+        string extension = Path.GetExtension(imageName).ToLower();
+        string mimeType = extension switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "image/jpeg"
+        };
+
+        return $"data:{mimeType};base64,{imageInBase64String}";
     }
 }

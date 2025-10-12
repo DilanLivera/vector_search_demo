@@ -76,13 +76,16 @@ public sealed class ImageCollection
 
                     Vectors vectors = await _model.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
 
+                    byte[] imageBytes = await File.ReadAllBytesAsync(imageFilePath);
+                    string imageInBase64String = Convert.ToBase64String(imageBytes);
+
                     PointStruct point = new()
                                         {
                                             Id = Guid.NewGuid(),
                                             Vectors = vectors,
                                             Payload =
                                             {
-                                                ["image"] = image, ["format"] = imageFormat, ["createdAtUtc"] = DateTimeOffset.UtcNow.ToString()
+                                                ["image_in_base64_string"] = imageInBase64String, ["image_name"] = image, ["format"] = imageFormat, ["created_at_utc"] = DateTimeOffset.UtcNow.ToString()
                                             }
                                         };
 

@@ -111,4 +111,20 @@ public sealed class ImageCollection
                                                queryVector,
                                                limit: Limit);
     }
+
+    /// <summary>
+    /// Searches for the most similar vectors to the query vector with additional filtering conditions.
+    /// </summary>
+    /// <param name="text">The text to search for.</param>
+    /// <param name="condition">The filtering condition to apply to the search.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
+    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string text, Condition condition)
+    {
+        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(text);
+
+        return await _qdrantClient.SearchAsync(CollectionName,
+                                               queryVector,
+                                               filter: condition,
+                                               limit: Limit);
+    }
 }

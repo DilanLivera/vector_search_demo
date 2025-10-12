@@ -1,0 +1,148 @@
+@page "/images"
+@rendermode InteractiveServer
+@inject ImageCollection Collection
+@using Qdrant.Client.Grpc
+@using UI.Infrastructure.Collections
+@using static Qdrant.Client.Grpc.Conditions
+
+<PageTitle>Image Vector Collection</PageTitle>
+
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            Image Vector Collection
+        </h1>
+
+        <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+            <p class="text-sm">
+                This page demonstrates vector similarity search using Qdrant. Each vector has 1024 dimensions and includes metadata (image name and format). The image collection is created and seeded during startup.
+            </p>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Search Vectors
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Enter a text to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
+                </p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Text
+                </label>
+                <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       @bind="SearchText"/>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Enter a text value to search
+                </p>
+            </div>
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                    @onclick="SearchAsync">
+                Search
+            </button>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Filtered Search
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Search for similar images but only return those where the image name is equal to the specified value. This demonstrates how to combine vector similarity search with metadata filtering.
+                </p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Image
+                </label>
+                <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       @bind="FilteredSearchText"/>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Enter a text value to search
+                </p>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    Image Name
+                </label>
+                <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                       @bind="FilteredSearchImageName"/>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Enter image name
+                </p>
+            </div>
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                    @onclick="SearchWithFilterAsync">
+                Search
+            </button>
+        </div>
+
+        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700">
+
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Search Results
+            </h3>
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-700 rounded-lg">
+                <p class="text-sm">
+                    Results show the 5 most similar vectors, ordered by similarity score (higher is more similar). Each result includes:
+                </p>
+                <ul class="mt-2 text-sm list-disc list-inside">
+                    <li>ID: The unique identifier of the vector</li>
+                    <li>Score: Similarity score (0-1, higher means more similar)</li>
+                    <li>Image: Image</li>
+                    <li>Image Name: Image Name</li>
+                </ul>
+            </div>
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">ID</th>
+                    <th scope="col" class="px-6 py-3">Score</th>
+                    <th scope="col" class="px-6 py-3">Image</th>
+                    <th scope="col" class="px-6 py-3">Image Name</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (ScoredPoint result in SearchResults)
+                {
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <td class="px-6 py-4">@result.Id.Uuid</td>
+                        <td class="px-6 py-4">@result.Score</td>
+                        <td class="px-6 py-4">@result.Payload["image"].StringValue</td>
+                        <td class="px-6 py-4">@result.Payload["image"].StringValue</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string SearchText { get; set; } = "flying objects";
+    private string FilteredSearchText { get; set; } = "bird";
+    private string FilteredSearchImageName { get; set; } = "parrot";
+    private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
+
+    private async Task SearchAsync()
+    {
+        SearchResults = await Collection.SearchAsync(SearchText);
+    }
+
+    private async Task SearchWithFilterAsync()
+    {
+        Condition condition = new()
+                              {
+                                  Filter = MatchText(field: "image", text: FilteredSearchImageName)
+                              };
+
+        SearchResults = await Collection.SearchAsync(FilteredSearchText, condition);
+    }
+}

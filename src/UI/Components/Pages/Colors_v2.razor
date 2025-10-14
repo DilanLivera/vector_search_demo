@@ -1,0 +1,182 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ColorCollection Collection
+@inject CollectionInitializationStatusManager StatusManager
+@using Qdrant.Client.Grpc
+@using UI.Infrastructure.Collections
+@using Range=Qdrant.Client.Grpc.Range
+@using static Qdrant.Client.Grpc.Conditions
+
+<PageTitle>Color Vector Collection</PageTitle>
+
+<style>
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+            transform: translateY(-30px) rotate(5deg);
+        }
+    }
+
+    .animate-float {
+        animation: float 20s ease-in-out infinite;
+    }
+
+    .animate-float-delay-1 { animation-delay: -5s; }
+    .animate-float-delay-2 { animation-delay: -10s; }
+    .animate-float-delay-3 { animation-delay: -15s; }
+    .animate-float-delay-4 { animation-delay: -7s; }
+    .animate-float-delay-5 { animation-delay: -12s; }
+</style>
+
+<div class="relative min-h-screen bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 flex items-center justify-center overflow-hidden rounded-md">
+    @* <!-- Floating Rocks --> *@
+    @* <div class="absolute w-48 h-44 top-[5%] left-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float"></div> *@
+    @* <div class="absolute w-36 h-32 top-[15%] right-[15%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-1"></div> *@
+    @* <div class="absolute w-44 h-40 bottom-[20%] left-[5%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-2"></div> *@
+    @* <div class="absolute w-40 h-36 bottom-[10%] right-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-3"></div> *@
+    @* <div class="absolute w-32 h-28 top-[40%] left-[20%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-4"></div> *@
+    @* <div class="absolute w-36 h-32 top-[50%] right-[25%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-5"></div> *@
+
+    <!-- Hero Content -->
+    <div class="relative z-10 text-center text-white max-w-4xl px-8">
+        <h1 class="text-7xl italic font-light mb-12 drop-shadow-lg tracking-wide" style="font-family: Georgia, serif;">
+            Color Vector Collection
+        </h1>
+
+        <!-- Status Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-8 backdrop-blur-md @GetStatusBgClass()">
+            @if (_collectionInitializationInfo.Status == InitializationStatus.InProgress)
+            {
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            }
+            else if (_collectionInitializationInfo.Status == InitializationStatus.Completed)
+            {
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            }
+            else if (_collectionInitializationInfo.Status == InitializationStatus.Failed)
+            {
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            }
+            <span>Loading: @_collectionInitializationInfo.Status</span>
+        </div>
+
+        <!-- Search Input -->
+        <div class="max-w-2xl mx-auto mb-8">
+            <div class="relative">
+                <input type="text"
+                       class="w-full py-5 pl-8 pr-20 rounded-full border-2 border-white/30 bg-white/15 backdrop-blur-md text-white text-lg placeholder-white/70 focus:outline-none focus:bg-white/25 focus:border-white/50 transition-all"
+                       placeholder="Enter a color"
+                       @bind="SearchVectorsColor" />
+                <button class="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+                        @onclick="SearchVectorsAsync">
+                    <svg class="w-5 h-5 stroke-blue-700 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Subtitle -->
+        <p class="text-xl leading-relaxed drop-shadow-md max-w-3xl mx-auto">
+            This page demonstrates vector similarity search using Qdrant. Enter a color to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
+        </p>
+    </div>
+</div>
+
+@if (SearchResults.Count > 0)
+{
+    <div class="bg-white py-16 px-8">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-4xl font-bold text-gray-900 mb-6">Search Results</h2>
+            <p class="text-gray-600 mb-8 leading-relaxed">
+                Results show the 5 most similar vectors, ordered by similarity score (higher is more similar). Each result includes the unique identifier, similarity score (0-1, higher means more similar), color name, and a random number between 0-9.
+            </p>
+
+            <div class="overflow-hidden rounded-xl shadow-lg">
+                <table class="w-full">
+                    <thead class="bg-blue-700 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Score</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Color</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Random Number</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (ScoredPoint result in SearchResults)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 text-gray-900">@result.Id</td>
+                                <td class="px-6 py-4 text-gray-900">@result.Score.ToString("F4")</td>
+                                <td class="px-6 py-4 text-gray-900">@result.Payload["color"]</td>
+                                <td class="px-6 py-4 text-gray-900">@result.Payload["rand_number"]</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string SearchVectorsColor { get; set; } = "Red";
+    private string FilteredSearchColor { get; set; } = "Yellow";
+    private int FilteredSearchMinRandomNumber { get; set; } = 3;
+    private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
+
+    private CollectionInitializationInfo _collectionInitializationInfo = new(nameof(ColorCollection)); // this is initialized to avoid the null warning
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _collectionInitializationInfo = StatusManager.GetCollectionInitializationInfo(nameof(ColorCollection));
+
+        StatusManager.CollectionStatusChanged += OnCollectionStatusChanged;
+    }
+
+    private void OnCollectionStatusChanged(object? sender, CollectionInitializationInfo info)
+    {
+        InvokeAsync(() =>
+        {
+            _collectionInitializationInfo = info;
+            StateHasChanged();
+        });
+    }
+
+    private async Task SearchVectorsAsync()
+    {
+        SearchResults = await Collection.SearchAsync(SearchVectorsColor);
+    }
+
+    private async Task SearchWithFilterAsync()
+    {
+        Condition condition = new()
+                              {
+                                  Filter = Range(field: "rand_number", new Range { Gte = FilteredSearchMinRandomNumber })
+                              };
+
+        SearchResults = await Collection.SearchAsync(FilteredSearchColor, condition);
+    }
+
+    private string GetStatusBgClass()
+    {
+        return _collectionInitializationInfo.Status switch
+        {
+            InitializationStatus.InProgress => "bg-blue-500/30 border-2 border-blue-500/50",
+            InitializationStatus.Completed => "bg-green-500/30 border-2 border-green-500/50",
+            InitializationStatus.Failed => "bg-red-500/30 border-2 border-red-500/50",
+            _ => "bg-gray-400/30 border-2 border-gray-400/50"
+        };
+    }
+}

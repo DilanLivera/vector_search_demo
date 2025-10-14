@@ -23,30 +23,59 @@
         animation: float 20s ease-in-out infinite;
     }
 
-    .animate-float-delay-1 { animation-delay: -5s; }
-    .animate-float-delay-2 { animation-delay: -10s; }
-    .animate-float-delay-3 { animation-delay: -15s; }
-    .animate-float-delay-4 { animation-delay: -7s; }
-    .animate-float-delay-5 { animation-delay: -12s; }
+    .animate-float-delay-1 {
+        animation-delay: -5s;
+    }
+
+    .animate-float-delay-2 {
+        animation-delay: -10s;
+    }
+
+    .animate-float-delay-3 {
+        animation-delay: -15s;
+    }
+
+    .animate-float-delay-4 {
+        animation-delay: -7s;
+    }
+
+    .animate-float-delay-5 {
+        animation-delay: -12s;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
 </style>
 
-<div class="relative min-h-screen bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 flex items-center justify-center overflow-hidden rounded-md">
-    @* <!-- Floating Rocks --> *@
-    @* <div class="absolute w-48 h-44 top-[5%] left-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float"></div> *@
-    @* <div class="absolute w-36 h-32 top-[15%] right-[15%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-1"></div> *@
-    @* <div class="absolute w-44 h-40 bottom-[20%] left-[5%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-2"></div> *@
-    @* <div class="absolute w-40 h-36 bottom-[10%] right-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-3"></div> *@
-    @* <div class="absolute w-32 h-28 top-[40%] left-[20%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-4"></div> *@
-    @* <div class="absolute w-36 h-32 top-[50%] right-[25%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-5"></div> *@
+<div class="relative bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 overflow-hidden transition-all duration-500 flex flex-col" style="min-height: calc(100vh - 5rem);">
+    <!-- Floating Rocks -->
+    <div class="absolute w-48 h-44 top-[5%] left-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float"></div>
+    <div class="absolute w-36 h-32 top-[15%] right-[15%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-1"></div>
+    <div class="absolute w-44 h-40 bottom-[20%] left-[5%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-2"></div>
+    <div class="absolute w-40 h-36 bottom-[10%] right-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-3"></div>
+    <div class="absolute w-32 h-28 top-[40%] left-[20%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-4"></div>
+    <div class="absolute w-36 h-32 top-[50%] right-[25%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-5"></div>
 
-    <!-- Hero Content -->
-    <div class="relative z-10 text-center text-white max-w-4xl px-8">
-        <h1 class="text-7xl italic font-light mb-12 drop-shadow-lg tracking-wide" style="font-family: Georgia, serif;">
+    <!-- Hero Content - moves up when results appear -->
+    <div class="relative z-10 text-center text-white px-8 @(SearchResults.Count > 0 ? "pt-8" : "pt-[15vh]") transition-all duration-500">
+        <h1 class="@(SearchResults.Count > 0 ? "text-5xl mb-4" : "text-7xl mb-12") italic font-light drop-shadow-lg tracking-wide transition-all duration-500" style="font-family: Georgia, serif;">
             Color Vector Collection
         </h1>
 
         <!-- Status Badge -->
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm mb-8 backdrop-blur-md @GetStatusBgClass()">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm @(SearchResults.Count > 0 ? "mb-4" : "mb-8") backdrop-blur-md @GetStatusBgClass() transition-all duration-500">
             @if (_collectionInitializationInfo.Status == InitializationStatus.InProgress)
             {
                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -70,12 +99,12 @@
         </div>
 
         <!-- Search Input -->
-        <div class="max-w-2xl mx-auto mb-8">
+        <div class="max-w-2xl mx-auto @(SearchResults.Count > 0 ? "mb-4" : "mb-8")">
             <div class="relative">
                 <input type="text"
                        class="w-full py-5 pl-8 pr-20 rounded-full border-2 border-white/30 bg-white/15 backdrop-blur-md text-white text-lg placeholder-white/70 focus:outline-none focus:bg-white/25 focus:border-white/50 transition-all"
                        placeholder="Enter a color"
-                       @bind="SearchVectorsColor" />
+                       @bind="SearchVectorsColor"/>
                 <button class="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
                         @onclick="SearchVectorsAsync">
                     <svg class="w-5 h-5 stroke-blue-700 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -84,53 +113,57 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Subtitle -->
-        <p class="text-xl leading-relaxed drop-shadow-md max-w-3xl mx-auto">
-            This page demonstrates vector similarity search using Qdrant. Enter a color to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
-        </p>
+    <!-- Content Area - Either Subtitle or Results -->
+    <div class="relative z-10 flex-1 flex items-center justify-center px-8 pb-8">
+        @if (SearchResults.Count == 0)
+        {
+            <!-- Subtitle -->
+            <p class="text-xl leading-relaxed drop-shadow-md max-w-3xl text-white text-center transition-all duration-500">
+                This page demonstrates semantic search using Qdrant and 'mxbai-embed-large' model. Each vector has 1024 dimensions and includes metadata (color and random number). The color collection is created and seeded during startup. Please enter a text to find the 5 most similar vectors in the collection. The search uses cosine similarity to measure how similar vectors are.
+            </p>
+        }
+        else
+        {
+            <!-- Results Section -->
+            <div class="w-full max-w-6xl animate-fade-in">
+                <h2 class="text-3xl font-bold text-white mb-4 text-center">Search Results</h2>
+                <p class="text-white/90 mb-6 leading-relaxed text-center">
+                    Results show the 5 most similar vectors, ordered by similarity score (higher is more similar).
+                </p>
+
+                <div class="overflow-hidden rounded-xl shadow-2xl border-2 border-white/30 bg-white/15 backdrop-blur-md">
+                    <table class="w-full">
+                        <thead class="border-b-2 border-white/30">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-white">ID</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-white">Score</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-white">Color</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider text-white">Random Number</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/20">
+                        @foreach (ScoredPoint result in SearchResults)
+                        {
+                            <tr class="hover:bg-white/10 transition-colors">
+                                <td class="px-6 py-4 text-white">@result.Id</td>
+                                <td class="px-6 py-4 text-white">@result.Score.ToString("F4")</td>
+                                <td class="px-6 py-4 text-white">@result.Payload["color"]</td>
+                                <td class="px-6 py-4 text-white">@result.Payload["rand_number"]</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
-@if (SearchResults.Count > 0)
-{
-    <div class="bg-white py-16 px-8">
-        <div class="max-w-6xl mx-auto">
-            <h2 class="text-4xl font-bold text-gray-900 mb-6">Search Results</h2>
-            <p class="text-gray-600 mb-8 leading-relaxed">
-                Results show the 5 most similar vectors, ordered by similarity score (higher is more similar). Each result includes the unique identifier, similarity score (0-1, higher means more similar), color name, and a random number between 0-9.
-            </p>
-
-            <div class="overflow-hidden rounded-xl shadow-lg">
-                <table class="w-full">
-                    <thead class="bg-blue-700 text-white">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Score</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Color</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Random Number</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach (ScoredPoint result in SearchResults)
-                        {
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 text-gray-900">@result.Id</td>
-                                <td class="px-6 py-4 text-gray-900">@result.Score.ToString("F4")</td>
-                                <td class="px-6 py-4 text-gray-900">@result.Payload["color"]</td>
-                                <td class="px-6 py-4 text-gray-900">@result.Payload["rand_number"]</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
-    private string SearchVectorsColor { get; set; } = "Red";
-    private string FilteredSearchColor { get; set; } = "Yellow";
+    private string SearchVectorsColor { get; set; } = "Grass";
+    private string FilteredSearchColor { get; set; } = "Sky";
     private int FilteredSearchMinRandomNumber { get; set; } = 3;
     private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
 
@@ -147,8 +180,7 @@
 
     private void OnCollectionStatusChanged(object? sender, CollectionInitializationInfo info)
     {
-        InvokeAsync(() =>
-        {
+        InvokeAsync(() => {
             _collectionInitializationInfo = info;
             StateHasChanged();
         });

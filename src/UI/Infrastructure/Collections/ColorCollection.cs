@@ -192,8 +192,8 @@ public sealed class ColorCollection
             _logger.LogError(exception, "Failed to initialize '{CollectionName}'", nameof(ImageCollection));
 
             _statusManager.SetCollectionStatus(nameof(ColorCollection),
-                                     InitializationStatus.Failed,
-                                     errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
+                                               InitializationStatus.Failed,
+                                               errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
         }
     }
 

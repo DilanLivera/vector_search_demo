@@ -108,8 +108,8 @@ public sealed class ImageCollection
             _logger.LogError(exception, "Failed to initialize '{CollectionName}'", nameof(ImageCollection));
 
             _statusManager.SetCollectionStatus(nameof(ImageCollection),
-                                     InitializationStatus.Failed,
-                                     errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
+                                               InitializationStatus.Failed,
+                                               errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
         }
     }
 

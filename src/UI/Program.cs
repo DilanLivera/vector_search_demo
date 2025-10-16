@@ -6,7 +6,7 @@ using UI.Components.Pages;
 using UI.Infrastructure;
 using UI.Infrastructure.Collections;
 using UI.Infrastructure.Models;
-using Vector.Search.Demo.ServiceDefaults;
+using Aspire.ServiceDefaults;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Vector.Search.Demo.ServiceDefaults\Vector.Search.Demo.ServiceDefaults.csproj"/>
+        <ProjectReference Include="..\Aspire.ServiceDefaults\Aspire.ServiceDefaults.csproj" />
     </ItemGroup>
 
 </Project>

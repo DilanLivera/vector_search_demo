@@ -1,11 +1,11 @@
 using Azure;
 using Azure.AI.Inference;
-using Qdrant.Client;
 using UI.Components;
 using UI.Components.Pages;
 using UI.Infrastructure;
 using UI.Infrastructure.Collections;
 using UI.Infrastructure.Models;
+using Vector.Search.Demo.ServiceDefaults;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -19,16 +19,15 @@ builder.Services.AddApplicationAuth(builder.Configuration);
 
 builder.Services.AddAuthorizationCore();
 
-builder.Services.AddHttpClient<OllamaMxbaiEmbedLargeModel>();
+builder.Services.AddScoped<OllamaMxbaiEmbedLargeModel>();
 builder.Services.AddScoped<AzureAiCohereEmbedV3EnglishModel>();
 
 builder.Services.AddScoped<ColorCollection>();
 builder.Services.AddScoped<ImageCollection>();
 
-builder.Services.AddScoped<QdrantClient>(_ => new QdrantClient(host: "localhost",
-                                                               port: 6334,
-                                                               apiKey: null,
-                                                               https: false));
+builder.AddQdrantClient(connectionName: "qdrant-db");
+builder.AddOllamaApiClient(connectionName: "embedding")
+       .AddEmbeddingGenerator();
 
 builder.Services.AddScoped<ImageEmbeddingsClient>(sp =>
 {
@@ -52,7 +51,11 @@ builder.Services.AddScoped<EmbeddingsClient>(sp =>
 
 builder.Services.AddSingleton<CollectionInitializationStatusManager>();
 
+builder.AddServiceDefaults();
+
 WebApplication app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 _ = Task.Run(async () =>
 {

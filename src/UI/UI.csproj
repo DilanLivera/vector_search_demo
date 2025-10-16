@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -15,9 +15,15 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Aspire.Qdrant.Client" Version="9.5.1"/>
         <PackageReference Include="Azure.AI.Inference" Version="1.0.0-beta.5"/>
+        <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="9.8.1-beta.408"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.1"/>
-        <PackageReference Include="Qdrant.Client" Version="1.14.0"/>
+        <PackageReference Include="Qdrant.Client" Version="1.15.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Vector.Search.Demo.ServiceDefaults\Vector.Search.Demo.ServiceDefaults.csproj"/>
     </ItemGroup>
 
 </Project>

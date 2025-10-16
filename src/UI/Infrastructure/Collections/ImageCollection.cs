@@ -31,7 +31,7 @@ public sealed class ImageCollection
 
     }
 
-    public async Task InitializeAsync()
+    public async Task<VoidResult> InitializeAsync()
     {
         try
         {
@@ -102,6 +102,8 @@ public sealed class ImageCollection
             await _qdrantClient.UpsertAsync(CollectionName, points);
 
             _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.Completed);
+
+            return VoidResult.Success();
         }
         catch (Exception exception)
         {
@@ -110,6 +112,8 @@ public sealed class ImageCollection
             _statusManager.SetCollectionStatus(nameof(ImageCollection),
                                                InitializationStatus.Failed,
                                                errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
+
+            return VoidResult.Failure(exception);
         }
     }
 

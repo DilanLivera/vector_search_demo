@@ -1,5 +1,6 @@
 using Azure;
 using Azure.AI.Inference;
+using UI;
 using UI.Components;
 using UI.Components.Pages;
 using UI.Infrastructure;
@@ -62,23 +63,22 @@ _ = Task.Run(async () =>
     using (IServiceScope scope = app.Services.CreateScope())
     {
         ILogger<Program> logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        using (logger.BeginScope("Starting collection initialization..."))
+        using (logger.BeginScope(state: "Starting collection initialization..."))
         {
-            try
-            {
-                ColorCollection colorCollection = scope.ServiceProvider.GetRequiredService<ColorCollection>();
-                await colorCollection.InitializeAsync();
+            ColorCollection colorCollection = scope.ServiceProvider.GetRequiredService<ColorCollection>();
+            VoidResult colorCollectionInitializationResult = await colorCollection.InitializeAsync();
 
+            if (colorCollectionInitializationResult.IsSuccess)
+            {
                 logger.LogDebug("'{CollectionName}' collection initialization completed successfully", nameof(ColorCollection));
-
-                ImageCollection imageCollection = scope.ServiceProvider.GetRequiredService<ImageCollection>();
-                await imageCollection.InitializeAsync();
-
-                logger.LogDebug("'{CollectionName}' collection initialization completed successfully", nameof(ImageCollection));
             }
-            catch (Exception exception)
+
+            ImageCollection imageCollection = scope.ServiceProvider.GetRequiredService<ImageCollection>();
+            VoidResult imageCollectionInitializationResult = await imageCollection.InitializeAsync();
+
+            if (imageCollectionInitializationResult.IsSuccess)
             {
-                logger.LogError(exception, "Collection initialization failed");
+                logger.LogDebug("'{CollectionName}' collection initialization completed successfully", nameof(ImageCollection));
             }
         }
     }

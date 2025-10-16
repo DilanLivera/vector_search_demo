@@ -139,7 +139,7 @@ public sealed class ColorCollection
     /// Ensures the vector collection exists in Qdrant with seed data.
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task InitializeAsync()
+    public async Task<VoidResult> InitializeAsync()
     {
         try
         {
@@ -186,6 +186,8 @@ public sealed class ColorCollection
             await _qdrantClient.UpsertAsync(CollectionName, points);
 
             _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.Completed);
+
+            return VoidResult.Success();
         }
         catch (Exception exception)
         {
@@ -194,6 +196,8 @@ public sealed class ColorCollection
             _statusManager.SetCollectionStatus(nameof(ColorCollection),
                                                InitializationStatus.Failed,
                                                errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
+
+            return VoidResult.Failure(exception.Message);
         }
     }
 

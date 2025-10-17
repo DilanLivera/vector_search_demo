@@ -38,8 +38,8 @@ builder.AddOllamaApiClient(connectionName: "embedding")
 builder.Services.AddScoped<ImageEmbeddingsClient>(sp =>
 {
     IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-    string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw new InvalidOperationException("'AzureInference:Credential' configuration is not set");
-    string serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw new InvalidOperationException("'AzureInference:Endpoint' configuration is not set");
+    string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw ConfigurationExceptionFactory.CreateException(propertyName: "AzureInference:Credential");
+    string serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw ConfigurationExceptionFactory.CreateException(propertyName: "AzureInference:Endpoint");
 
     return new ImageEmbeddingsClient(new Uri(serviceEndpoint),
                                      new AzureKeyCredential(azureInferenceCredential));
@@ -48,8 +48,8 @@ builder.Services.AddScoped<ImageEmbeddingsClient>(sp =>
 builder.Services.AddScoped<EmbeddingsClient>(sp =>
 {
     IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-    string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw new InvalidOperationException("'AzureInference:Credential' configuration is not set");
-    string serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw new InvalidOperationException("'AzureInference:Endpoint' configuration is not set");
+    string azureInferenceCredential = configuration.GetValue<string>(key: "AzureAiInference:AzureKeyCredential") ?? throw ConfigurationExceptionFactory.CreateException(propertyName: "AzureInference:Credential");
+    string serviceEndpoint = configuration.GetValue<string>(key: "AzureAiInference:Endpoint") ?? throw ConfigurationExceptionFactory.CreateException(propertyName: "AzureInference:Endpoint");
 
     return new EmbeddingsClient(new Uri(serviceEndpoint),
                                 new AzureKeyCredential(azureInferenceCredential));
@@ -60,8 +60,8 @@ builder.Services.AddSingleton<CollectionInitializationStatusManager>();
 builder.Services.AddSingleton<BlobContainerClient>(sp =>
 {
     IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-    string connectionString = configuration.GetValue<string>(key: "AzureBlobStorage:ConnectionString") ?? throw new InvalidOperationException("'AzureBlobStorage:ConnectionString' configuration is not set");
-    string blobContainerName = configuration.GetValue<string>(key: "AzureBlobStorage:BlobContainerName") ?? throw new InvalidOperationException("'AzureBlobStorage:BlobContainerName' configuration is not set");
+    string connectionString = configuration.GetValue<string>(key: "AzureBlobStorage:ConnectionString") ?? throw ConfigurationExceptionFactory.CreateException(propertyName: "AzureBlobStorage:ConnectionString");
+    string blobContainerName = configuration.GetValue<string>(key: "AzureBlobStorage:BlobContainerName") ?? throw ConfigurationExceptionFactory.CreateException(propertyName: "AzureBlobStorage:BlobContainerName");
 
     return new BlobContainerClient(connectionString, blobContainerName);
 });

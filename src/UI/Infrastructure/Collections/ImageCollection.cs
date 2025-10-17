@@ -31,7 +31,7 @@ public sealed class ImageCollection
         _qdrantClient = qdrantClient;
 
         _imageDirectoryPath = configuration.GetValue<string>(key: "ImagesDirectoryPath") ??
-                             throw new InvalidOperationException("'ImagesDirectoryPath' configuration is not set");
+                              throw ConfigurationExceptionFactory.CreateException(propertyName: "ImagesDirectoryPath");
     }
 
     public async Task<VoidResult> InitializeAsync()

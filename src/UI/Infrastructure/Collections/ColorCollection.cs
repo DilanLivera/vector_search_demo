@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using UI.Components.Pages;
@@ -122,6 +123,7 @@ public sealed class ColorCollection
     private readonly QdrantClient _qdrantClient;
     private readonly OllamaMxbaiEmbedLargeModel _model;
     private const ulong Limit = 5; // the 5 closest points
+    private static readonly ActivitySource Source = OtelHelpers.ActivitySource;
 
     public ColorCollection(
         CollectionInitializationStatusManager statusManager,
@@ -141,63 +143,70 @@ public sealed class ColorCollection
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task<VoidResult> InitializeAsync()
     {
-        try
+        using (Activity? activity = Source.StartActivity(name: OtelHelpers.ActivityNames.ColorCollectionInitializationMessage))
         {
-            _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.InProgress);
-
-            if (await _qdrantClient.CollectionExistsAsync(CollectionName))
+            try
             {
-                await _qdrantClient.DeleteCollectionAsync(CollectionName);
+                _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.InProgress);
 
                 if (await _qdrantClient.CollectionExistsAsync(CollectionName))
                 {
-                    throw new InvalidOperationException($"Failed to delete '{CollectionName}'");
+                    await _qdrantClient.DeleteCollectionAsync(CollectionName);
+                    activity?.AddEvent(new ActivityEvent(name: "Collection deleted"));
+
+                    if (await _qdrantClient.CollectionExistsAsync(CollectionName))
+                    {
+                        throw new InvalidOperationException($"Failed to delete '{CollectionName}'");
+                    }
                 }
-            }
 
-            VectorParams vectorsConfig = new()
-                                         {
-                                             Size = 1024, // this should match the vector dimension of color
-                                             Distance = Distance.Cosine
-                                         };
-            await _qdrantClient.CreateCollectionAsync(CollectionName, vectorsConfig);
+                VectorParams vectorsConfig = new()
+                                             {
+                                                 Size = 1024, // this should match the vector dimension of color
+                                                 Distance = Distance.Cosine
+                                             };
+                await _qdrantClient.CreateCollectionAsync(CollectionName, vectorsConfig);
 
-            if (!await _qdrantClient.CollectionExistsAsync(CollectionName))
-            {
-                throw new InvalidOperationException($"'{CollectionName}' collection not found");
-            }
+                if (!await _qdrantClient.CollectionExistsAsync(CollectionName))
+                {
+                    throw new InvalidOperationException($"'{CollectionName}' collection not found");
+                }
 
-            List<PointStruct> points = [];
-            foreach (string color in Colors)
-            {
-                Vectors vectors = await _model.GenerateTextVectorEmbeddingsAsync(color);
-                PointStruct point = new()
-                                    {
-                                        Id = (ulong)points.Count + 1,
-                                        Vectors = vectors,
-                                        Payload =
+                activity?.AddEvent(new ActivityEvent(name: "Collection created"));
+
+                List<PointStruct> points = [];
+                foreach (string color in Colors)
+                {
+                    Vectors vectors = await _model.GenerateTextVectorEmbeddingsAsync(color);
+                    PointStruct point = new()
                                         {
-                                            ["color"] = color, ["rand_number"] = (points.Count + 1) % 10
-                                        }
-                                    };
-                points.Add(point);
+                                            Id = (ulong)points.Count + 1,
+                                            Vectors = vectors,
+                                            Payload =
+                                            {
+                                                ["color"] = color, ["rand_number"] = (points.Count + 1) % 10
+                                            }
+                                        };
+                    points.Add(point);
+                }
+
+                await _qdrantClient.UpsertAsync(CollectionName, points);
+                activity?.AddEvent(new ActivityEvent(name: "Points added to the collection"));
+
+                _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.Completed);
+
+                return VoidResult.Success();
             }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to initialize '{CollectionName}'", nameof(ImageCollection));
 
-            await _qdrantClient.UpsertAsync(CollectionName, points);
+                _statusManager.SetCollectionStatus(nameof(ColorCollection),
+                                                   InitializationStatus.Failed,
+                                                   errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
 
-            _statusManager.SetCollectionStatus(nameof(ColorCollection), InitializationStatus.Completed);
-
-            return VoidResult.Success();
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Failed to initialize '{CollectionName}'", nameof(ImageCollection));
-
-            _statusManager.SetCollectionStatus(nameof(ColorCollection),
-                                               InitializationStatus.Failed,
-                                               errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
-
-            return VoidResult.Failure(exception.Message);
+                return VoidResult.Failure(exception.Message);
+            }
         }
     }
 

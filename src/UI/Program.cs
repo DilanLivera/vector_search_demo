@@ -32,7 +32,7 @@ builder.Services.AddScoped<ColorCollection>();
 builder.Services.AddScoped<ImageCollection>();
 
 builder.AddQdrantClient(connectionName: "qdrant-db");
-builder.AddOllamaApiClient(connectionName: "embedding")
+builder.AddOllamaApiClient(connectionName: "embedding-model")
        .AddEmbeddingGenerator();
 
 builder.Services.AddScoped<ImageEmbeddingsClient>(sp =>

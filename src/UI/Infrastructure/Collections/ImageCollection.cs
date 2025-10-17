@@ -13,7 +13,7 @@ public sealed class ImageCollection
     private const string CollectionName = "images";
 
     private readonly List<string> _images = ["dogs.jpeg", "elephant.jpeg", "parrot.jpeg", "tiger.jpg"];
-    private const string ImageDirectoryPath = "/Users/dilan_livera/dev/repositories/vector_search_demo/src/UI/Data";
+    private readonly string _imageDirectoryPath;
 
     private readonly QdrantClient _qdrantClient;
     private const ulong Limit = 5; // the 5 closest points
@@ -22,13 +22,16 @@ public sealed class ImageCollection
         CollectionInitializationStatusManager statusManager,
         ILogger<ImageCollection> logger,
         AzureAiCohereEmbedV3EnglishModel model,
-        QdrantClient qdrantClient)
+        QdrantClient qdrantClient,
+        IConfiguration configuration)
     {
         _statusManager = statusManager;
         _logger = logger;
         _model = model;
         _qdrantClient = qdrantClient;
 
+        _imageDirectoryPath = configuration.GetValue<string>(key: "ImagesDirectoryPath") ??
+                             throw new InvalidOperationException("'ImagesDirectoryPath' configuration is not set");
     }
 
     public async Task<VoidResult> InitializeAsync()
@@ -65,7 +68,7 @@ public sealed class ImageCollection
                 KeyValuePair<string, object> logState = new("Image", image);
                 using (_logger.BeginScope(logState))
                 {
-                    string imageFilePath = Path.Combine(ImageDirectoryPath, image);
+                    string imageFilePath = Path.Combine(_imageDirectoryPath, image);
 
                     _logger.LogDebug("Loading '{ImageFilePath}' image", imageFilePath);
 
@@ -73,7 +76,7 @@ public sealed class ImageCollection
                     {
                         _logger.LogWarning("'{ImageName}' image does not exist in the '{ImageDirectoryPath}' directory.",
                                            image,
-                                           ImageDirectoryPath);
+                                           _imageDirectoryPath);
 
                         continue;
                     }

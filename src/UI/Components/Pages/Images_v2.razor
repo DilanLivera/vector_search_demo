@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject ImageCollection Collection
 @inject CollectionInitializationStatusManager StatusManager
+@using System.Diagnostics
 @using Qdrant.Client.Grpc
 @using UI.Infrastructure.Collections
 @using static Qdrant.Client.Grpc.Conditions
@@ -168,7 +169,10 @@
 
     private async Task SearchAsync()
     {
-        SearchResults = await Collection.SearchAsync(SearchText);
+        using (Activity? activity = OtelHelpers.ActivitySource.StartActivity(name: OtelHelpers.ActivityNames.ImageSearchVectorsMessage))
+        {
+            SearchResults = await Collection.SearchAsync(SearchText);
+        }
     }
 
     private async Task SearchWithFilterAsync()

@@ -13,6 +13,7 @@ public static class OtelHelpers
 
     public static class ActivityNames
     {
-        public const string ColorCollectionInitializationMessage =  $"{nameof(ColorCollection)} collection initialization.";
+        public const string ColorCollectionInitializationMessage = $"{nameof(ColorCollection)}_Initialization";
+        public const string ImageCollectionInitializationMessage = $"{nameof(ImageCollection)}_Initialization";
     }
 }

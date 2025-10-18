@@ -14,6 +14,8 @@ public static class OtelHelpers
     public static class ActivityNames
     {
         public const string ColorCollectionInitializationMessage = $"{nameof(ColorCollection)}_Initialization";
-        public const string ImageCollectionInitializationMessage = $"{nameof(ImageCollection)}_Initialization";
+        public const string ColorSearchVectorsMessage = "Color_Search.";
+
+        public const string ImageCollectionInitializationMessage =  $"{nameof(ImageCollection)}_Initialization";
     }
 }

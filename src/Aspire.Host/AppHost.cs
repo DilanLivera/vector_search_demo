@@ -26,4 +26,23 @@ IResourceBuilder<ProjectResource> ui = builder.AddProject<Projects.UI>(name: "ui
                                               .WaitFor(qdrantDb)
                                               .WaitFor(embedding);
 
+// the following is wip. currently prometheus container fails to start.
+IResourceBuilder<ContainerResource> prometheus = builder.AddContainer("prometheus", "prom/prometheus", "v3.2.1")
+                                                        .WithBindMount("../../container_volumes/prometheus", "/etc/prometheus")
+                                                        .WithArgs("--web.enable-otlp-receiver", "--config.file=/etc/prometheus/prometheus.yaml")
+                                                        .WithHttpEndpoint(targetPort: 9090, name: "http");
+
+IResourceBuilder<ContainerResource> grafana = builder.AddContainer("grafana", "grafana/grafana")
+                                                     .WithBindMount("../../container_volumes/grafana/config", "/etc/grafana", isReadOnly: true)
+                                                     .WithBindMount("../../container_volumes/grafana/dashboards", "/var/lib/grafana/dashboards", isReadOnly: true)
+                                                     .WithEnvironment("PROMETHEUS_ENDPOINT", prometheus.GetEndpoint("http"))
+                                                     .WithHttpEndpoint(port: 3000, targetPort: 3000, name: "http")
+                                                     .WithLifetime(ContainerLifetime.Session); // Force fresh container each run
+
+IResourceBuilder<OpenTelemetryCollectorResource> otelCollector = builder.AddOpenTelemetryCollector("otelcollector")
+                                                                        .WithConfig("./config.yaml")
+                                                                        .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
+                                                                        .WithAppForwarding();
+
+
 builder.Build().Run();

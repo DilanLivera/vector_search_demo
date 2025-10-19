@@ -488,4 +488,42 @@ $RECYCLE.BIN/
 *.onnx
 
 # docker container volumes
-container_volumes
+container_volumes/*
+
+# Don't ignore prometheus directory
+!container_volumes/prometheus/
+
+# Ignore everything inside prometheus
+container_volumes/prometheus/*
+
+# Except the specific file
+!container_volumes/prometheus/prometheus.yml
+
+# Don't ignore grafana directory
+!container_volumes/grafana/
+
+# Ignore everything inside grafana
+container_volumes/grafana/*
+
+# Don't ignore config directory
+!container_volumes/grafana/config/
+
+# Ignore everything inside config
+container_volumes/grafana/config/*
+
+# Don't ignore provisioning directory
+!container_volumes/grafana/config/provisioning/
+
+# Ignore everything inside provisioning
+container_volumes/grafana/config/provisioning/*
+
+# Don't ignore these specific directories and their contents
+!container_volumes/grafana/config/provisioning/dashboards/
+!container_volumes/grafana/config/provisioning/dashboards/**
+
+!container_volumes/grafana/config/provisioning/datasources/
+!container_volumes/grafana/config/provisioning/datasources/**
+
+# Don't ignore dashboards directory at grafana root level
+!container_volumes/grafana/dashboards/
+!container_volumes/grafana/dashboards/**

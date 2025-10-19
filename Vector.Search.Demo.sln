@@ -21,6 +21,38 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.Host", "src\Aspire.H
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.ServiceDefaults", "src\Aspire.ServiceDefaults\Aspire.ServiceDefaults.csproj", "{672176D7-34B4-4795-B4B3-26E9F002304E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grafana", "grafana", "{8AB4D721-3266-4697-96AA-11C98428109F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".config", ".config", "{A510EF91-FE5B-4A8A-B95C-9494433AD4B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "provisioning", "provisioning", "{B360D256-B054-4A66-910E-8B0B065326AE}"
+	ProjectSection(SolutionItems) = preProject
+		container_volumes\grafana\config\grafana.ini = container_volumes\grafana\config\grafana.ini
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dashboards", "dashboards", "{7B70D1F2-270B-4CE2-BA1A-AF112086A736}"
+	ProjectSection(SolutionItems) = preProject
+		container_volumes\grafana\dashboards\aspnetcore-endpoint.json = container_volumes\grafana\dashboards\aspnetcore-endpoint.json
+		container_volumes\grafana\dashboards\aspnetcore.json = container_volumes\grafana\dashboards\aspnetcore.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dashboards", "dashboards", "{F26E58F5-F1FE-4AF7-8650-D383BBCB1CE7}"
+	ProjectSection(SolutionItems) = preProject
+		container_volumes\grafana\config\provisioning\dashboards\default.yaml = container_volumes\grafana\config\provisioning\dashboards\default.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources", "{E5BDD7F6-4F8B-4C45-8257-F281A2ED89E0}"
+	ProjectSection(SolutionItems) = preProject
+		container_volumes\grafana\config\provisioning\datasources\default.yaml = container_volumes\grafana\config\provisioning\datasources\default.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "container_volumes", "container_volumes", "{B0087104-5EA8-485A-B571-D13719F025E0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "prometheus", "prometheus", "{B76669F1-03B6-48AF-A89E-FB4F6BA3DBFA}"
+	ProjectSection(SolutionItems) = preProject
+		container_volumes\prometheus\prometheus.yml = container_volumes\prometheus\prometheus.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +65,14 @@ Global
 		{9079C453-F3F8-42B4-BB2D-BB2A5A08947A} = {AB569830-2264-45AA-A50E-BFB767806A89}
 		{76013D9D-B0F5-4452-B6D8-B5446175304A} = {AB569830-2264-45AA-A50E-BFB767806A89}
 		{672176D7-34B4-4795-B4B3-26E9F002304E} = {AB569830-2264-45AA-A50E-BFB767806A89}
+		{A510EF91-FE5B-4A8A-B95C-9494433AD4B1} = {8AB4D721-3266-4697-96AA-11C98428109F}
+		{B360D256-B054-4A66-910E-8B0B065326AE} = {A510EF91-FE5B-4A8A-B95C-9494433AD4B1}
+		{7B70D1F2-270B-4CE2-BA1A-AF112086A736} = {8AB4D721-3266-4697-96AA-11C98428109F}
+		{F26E58F5-F1FE-4AF7-8650-D383BBCB1CE7} = {B360D256-B054-4A66-910E-8B0B065326AE}
+		{E5BDD7F6-4F8B-4C45-8257-F281A2ED89E0} = {B360D256-B054-4A66-910E-8B0B065326AE}
+		{B0087104-5EA8-485A-B571-D13719F025E0} = {DCFB65A3-24E3-401C-9D18-E0CC4A553074}
+		{B76669F1-03B6-48AF-A89E-FB4F6BA3DBFA} = {B0087104-5EA8-485A-B571-D13719F025E0}
+		{8AB4D721-3266-4697-96AA-11C98428109F} = {B0087104-5EA8-485A-B571-D13719F025E0}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9079C453-F3F8-42B4-BB2D-BB2A5A08947A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

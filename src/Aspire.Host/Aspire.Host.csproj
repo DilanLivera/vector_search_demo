@@ -14,6 +14,7 @@
         <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.1"/>
         <PackageReference Include="Aspire.Hosting.Qdrant" Version="9.5.1"/>
         <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.8.1-beta.406"/>
+        <PackageReference Include="CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector" Version="9.8.1-beta.410" />
     </ItemGroup>
 
     <ItemGroup>

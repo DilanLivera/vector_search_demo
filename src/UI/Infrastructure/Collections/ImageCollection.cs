@@ -8,41 +8,38 @@ namespace UI.Infrastructure.Collections;
 
 public sealed class ImageCollection
 {
-    private readonly CollectionInitializationStatusManager _statusManager;
-    private readonly ILogger<ImageCollection> _logger;
-    private readonly AzureAiCohereEmbedV3EnglishModel _model;
     private const string CollectionName = "images";
-
-    private readonly List<string> _images = ["dogs.jpeg", "elephant.jpeg", "parrot.jpeg", "tiger.jpg"];
-    private readonly string _imageDirectoryPath;
-
-    private readonly QdrantClient _qdrantClient;
     private const ulong Limit = 5; // the 5 closest points
     private static readonly ActivitySource Source = OtelHelpers.ActivitySource;
 
+    private readonly AzureAiCohereEmbedV3EnglishModel _model;
+    private readonly CollectionInitializationStatusManager _statusManager;
+    private readonly DirectoryImagesCollectionInitializer _collectionInitializer;
+    private readonly ILogger<ImageCollection> _logger;
+    private readonly QdrantClient _qdrantClient;
+
     public ImageCollection(
-        CollectionInitializationStatusManager statusManager,
-        ILogger<ImageCollection> logger,
         AzureAiCohereEmbedV3EnglishModel model,
-        QdrantClient qdrantClient,
-        IConfiguration configuration)
+        CollectionInitializationStatusManager statusManager,
+        DirectoryImagesCollectionInitializer collectionInitializer,
+        ILogger<ImageCollection> logger,
+        QdrantClient qdrantClient)
     {
         _statusManager = statusManager;
+        _collectionInitializer = collectionInitializer;
         _logger = logger;
         _model = model;
         _qdrantClient = qdrantClient;
-
-        _imageDirectoryPath = configuration.GetValue<string>(key: "ImagesDirectoryPath") ??
-                              throw ConfigurationExceptionFactory.CreateException(propertyName: "ImagesDirectoryPath");
     }
 
     public async Task<VoidResult> InitializeAsync()
     {
         using (Activity? activity = Source.StartActivity(name: OtelHelpers.ActivityNames.ImageCollectionInitializationMessage))
         {
+            _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.InProgress);
+
             try
             {
-                _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.InProgress);
 
                 if (await _qdrantClient.CollectionExistsAsync(CollectionName))
                 {
@@ -68,53 +65,6 @@ public sealed class ImageCollection
                 }
 
                 activity?.AddEvent(new ActivityEvent(name: "Collection created"));
-
-                List<PointStruct> points = [];
-                foreach (string image in _images)
-                {
-                    KeyValuePair<string, object> logState = new("Image", image);
-                    using (_logger.BeginScope(logState))
-                    {
-                        string imageFilePath = Path.Combine(_imageDirectoryPath, image);
-
-                        _logger.LogDebug("Loading '{ImageFilePath}' image", imageFilePath);
-
-                        if (!File.Exists(imageFilePath))
-                        {
-                            _logger.LogWarning("'{ImageName}' image does not exist in the '{ImageDirectoryPath}' directory.",
-                                               image,
-                                               _imageDirectoryPath);
-
-                            continue;
-                        }
-
-                        string imageFormat = Path.GetExtension(imageFilePath);
-
-                        Vectors vectors = await _model.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
-
-                        byte[] imageBytes = await File.ReadAllBytesAsync(imageFilePath);
-                        string imageInBase64String = Convert.ToBase64String(imageBytes);
-
-                        PointStruct point = new()
-                                            {
-                                                Id = Guid.NewGuid(),
-                                                Vectors = vectors,
-                                                Payload =
-                                                {
-                                                    ["image_in_base64_string"] = imageInBase64String, ["image_name"] = image, ["format"] = imageFormat, ["created_at_utc"] = DateTimeOffset.UtcNow.ToString()
-                                                }
-                                            };
-
-                        points.Add(point);
-                    }
-                }
-
-                await _qdrantClient.UpsertAsync(CollectionName, points);
-                activity?.AddEvent(new ActivityEvent(name: "Points added to the collection"));
-
-                _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.Completed);
-
-                return VoidResult.Success();
             }
             catch (Exception exception)
             {
@@ -126,6 +76,23 @@ public sealed class ImageCollection
 
                 return VoidResult.Failure(exception);
             }
+
+            VoidResult result = await _collectionInitializer.InitializeCollectionAsync(CollectionName);
+
+            if (!result.IsSuccess)
+            {
+                _statusManager.SetCollectionStatus(nameof(ImageCollection),
+                                                   InitializationStatus.Failed,
+                                                   errorMessage: $"Failed to initialize '{CollectionName}' due to '{result.Error.Message}' error.");
+
+                return VoidResult.Failure(result.Error);
+            }
+
+            activity?.AddEvent(new ActivityEvent(name: "Points added to the collection"));
+
+            _statusManager.SetCollectionStatus(nameof(ImageCollection), InitializationStatus.Completed);
+
+            return VoidResult.Success();
         }
     }
 

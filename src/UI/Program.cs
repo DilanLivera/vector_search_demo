@@ -66,6 +66,8 @@ builder.Services.AddSingleton<BlobContainerClient>(sp =>
     return new BlobContainerClient(connectionString, blobContainerName);
 });
 
+builder.Services.AddSingleton<DirectoryImagesCollectionInitializer>();
+
 builder.AddServiceDefaults();
 
 WebApplication app = builder.Build();

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using UI.Infrastructure.Collections;
+using UI.Infrastructure.Collections.Images;
 
 namespace UI;
 

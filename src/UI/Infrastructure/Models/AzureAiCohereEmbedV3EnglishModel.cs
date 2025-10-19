@@ -55,6 +55,39 @@ public sealed class AzureAiCohereEmbedV3EnglishModel
         }
     }
 
+    public async Task<float[]> GenerateImageVectorEmbeddingsFromBase64StringAsync(string imageInBase64String, string imageFormat)
+    {
+        ImageEmbeddingInput input = new($"data:{imageFormat};base64,{imageInBase64String}");
+
+        ImageEmbeddingsOptions options = new(input: [input])
+                                         {
+
+                                             InputType = EmbeddingInputType.Document, Model = "Cohere-embed-v3-english"
+                                         };
+
+        try
+        {
+            Response<EmbeddingsResult> response = await _imageEmbeddingsClient.EmbedAsync(options);
+
+            _logger.LogDebug("Embedding Response: {EmbeddingsResponse}", JsonSerializer.Serialize(response));
+
+            float[][] embeddings = response.Value
+                                           .Data
+                                           .Select(i => i.Embedding.ToObjectFromJson<float[]>() ?? throw new InvalidOperationException("Failed to deserialize embedding item."))
+                                           .ToArray();
+
+            Debug.Assert(embeddings.Length == 1, message: "Embedding list must contain only one item.");
+
+            return embeddings.First(); // todo: must return a result type
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to generate embedding for image");
+
+            throw; // todo: must return an error result instead of throwing
+        }
+    }
+
     public async Task<float[]> GenerateTextVectorEmbeddingsAsync(string searchText)
     {
         List<string> input = [searchText];

@@ -2,7 +2,7 @@ using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using UI.Infrastructure.Models;
 
-namespace UI.Infrastructure.Collections;
+namespace UI.Infrastructure.Collections.Images;
 
 public sealed class DirectoryImagesCollectionInitializer
 {

@@ -2,7 +2,8 @@ namespace UI.Data;
 
 public static class AzureBlobStorageData
 {
-    public static IReadOnlyList<string> BlobNames =
+    // todo: find a better way to get blob names
+    public static readonly IReadOnlyList<string> BlobNames =
     [
         "000000117874.64ea5627670442bab9a2a5883ea64ece.COLOUR",
         "000000117875.c2e8890ba3d446cba2f743245066805e.COLOUR",

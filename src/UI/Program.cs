@@ -11,6 +11,7 @@ using UI.Components.Pages;
 using UI.Data;
 using UI.Infrastructure;
 using UI.Infrastructure.Collections;
+using UI.Infrastructure.Collections.Images;
 using UI.Infrastructure.Models;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -67,6 +68,7 @@ builder.Services.AddSingleton<BlobContainerClient>(sp =>
 });
 
 builder.Services.AddSingleton<DirectoryImagesCollectionInitializer>();
+builder.Services.AddSingleton<AzureBlobImagesCollectionInitializer>();
 
 builder.AddServiceDefaults();
 
@@ -96,59 +98,6 @@ _ = Task.Run(async () =>
             if (imageCollectionInitializationResult.IsSuccess)
             {
                 logger.LogDebug("'{CollectionName}' collection initialization completed successfully", nameof(ImageCollection));
-            }
-
-            BlobContainerClient blobContainerClient = scope.ServiceProvider.GetRequiredService<BlobContainerClient>();
-            Response<bool> doesContainerExist = await blobContainerClient.ExistsAsync();
-
-            if (!doesContainerExist)
-            {
-                logger.LogInformation("Blob container does not exist");
-            }
-
-            // logger.LogInformation("Listing blobs in container:");
-            // await foreach (BlobItem blob in  blobContainerClient.GetBlobsAsync())
-            // {
-            //     logger.LogInformation("- {BlobItemName} {BlobType}", blob.Name, "blob.Properties?.BlobType.Value");
-            // }
-
-            string blobName = AzureBlobStorageData.BlobNames[^305];
-            BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
-            Response<BlobDownloadResult> blobDownloadResult = await blobClient.DownloadContentAsync();
-
-            if (blobDownloadResult.HasValue)
-            {
-                BinaryData blobContent = blobDownloadResult.Value.Content;
-                string imageInBase64String = Convert.ToBase64String(blobContent.ToArray());
-
-                ImageEmbeddingInput input = new($"data:image/jpg;base64,{imageInBase64String}");
-
-                ImageEmbeddingsClient imageEmbeddingsClient = scope.ServiceProvider.GetRequiredService<ImageEmbeddingsClient>();
-                ImageEmbeddingsOptions options = new(input: [input])
-                                                 {
-
-                                                     InputType = EmbeddingInputType.Document, Model = "Cohere-embed-v3-english"
-                                                 };
-
-                Response<EmbeddingsResult> embeddingResult = await imageEmbeddingsClient.EmbedAsync(options);
-                float[] embedding = embeddingResult.Value
-                                                   .Data
-                                                   .Select(i => i.Embedding.ToObjectFromJson<float[]>() ?? throw new InvalidOperationException("Failed to deserialize embedding item."))
-                                                   .ToArray()
-                                                   .First();
-
-                PointStruct point = new()
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        Vectors = embedding,
-                                        Payload =
-                                        {
-                                            ["image_in_base64_string"] = imageInBase64String, ["image_name"] = blobName, ["format"] = blobContent.MediaType ?? "", ["created_at_utc"] = DateTimeOffset.UtcNow.ToString()
-                                        }
-                                    };
-
-                QdrantClient qdrantClient = scope.ServiceProvider.GetRequiredService<QdrantClient>();
-                UpdateResult updateResult = await qdrantClient.UpsertAsync(collectionName: "images", points: [point]);
             }
         }
     }

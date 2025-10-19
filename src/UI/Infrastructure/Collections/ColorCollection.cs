@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using UI.Components.Pages;
+using UI.Infrastructure.Collections.Images;
 using UI.Infrastructure.Models;
 
 namespace UI.Infrastructure.Collections;

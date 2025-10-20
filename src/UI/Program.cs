@@ -67,8 +67,8 @@ builder.Services.AddSingleton<BlobContainerClient>(sp =>
     return new BlobContainerClient(connectionString, blobContainerName);
 });
 
-builder.Services.AddSingleton<DirectoryImagesCollectionInitializer>();
-builder.Services.AddSingleton<AzureBlobImagesCollectionInitializer>();
+builder.Services.AddScoped<DirectoryImagesCollectionInitializer>();
+builder.Services.AddScoped<AzureBlobImagesCollectionInitializer>();
 
 builder.AddServiceDefaults();
 

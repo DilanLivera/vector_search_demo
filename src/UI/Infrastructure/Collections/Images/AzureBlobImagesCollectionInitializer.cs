@@ -3,6 +3,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using System.Text.Json;
 using UI.Data;
 using UI.Infrastructure.Models;
 
@@ -36,13 +37,15 @@ public sealed class AzureBlobImagesCollectionInitializer
             if (!doesContainerExist)
             {
                 _logger.LogInformation("Blob container does not exist");
+
+                return VoidResult.Failure(errorMessage: "Blob container does not exist");
             }
 
-            _logger.LogInformation("Listing blobs in container:");
-            await foreach (BlobItem blob in _blobContainerClient.GetBlobsAsync())
-            {
-                _logger.LogInformation("- {BlobItemName} {BlobType}", blob.Name, "blob.Properties?.BlobType.Value");
-            }
+            // _logger.LogInformation("Listing blobs in container:");
+            // await foreach (BlobItem blob in _blobContainerClient.GetBlobsAsync())
+            // {
+            //     _logger.LogInformation("- {BlobItemName} {BlobType}", blob.Name, "blob.Properties?.BlobType.Value");
+            // }
 
             foreach (string blobName in AzureBlobStorageData.BlobNames)
             {
@@ -69,7 +72,11 @@ public sealed class AzureBlobImagesCollectionInitializer
                                         }
                                     };
 
-                _ = await _qdrantClient.UpsertAsync(collectionName, points: [point]);
+                UpdateResult upsertResult = await _qdrantClient.UpsertAsync(collectionName, points: [point]);
+
+                _logger.LogDebug("Upserted {CollectionName}. Upsert result: {UpsertResult}",
+                                 collectionName,
+                                 JsonSerializer.Serialize(upsertResult));
             }
 
             return VoidResult.Success();

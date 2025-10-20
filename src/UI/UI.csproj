@@ -21,6 +21,7 @@
         <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="9.8.1-beta.408"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.1"/>
         <PackageReference Include="Qdrant.Client" Version="1.15.1"/>
+        <PackageReference Include="SkiaSharp" Version="3.119.1" />
     </ItemGroup>
 
     <ItemGroup>

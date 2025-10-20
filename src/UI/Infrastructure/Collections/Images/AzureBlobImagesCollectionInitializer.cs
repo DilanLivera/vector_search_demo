@@ -3,6 +3,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using SkiaSharp;
 using System.Text.Json;
 using UI.Data;
 using UI.Infrastructure.Models;
@@ -58,10 +59,21 @@ public sealed class AzureBlobImagesCollectionInitializer
                 }
 
                 BinaryData blobContent = blobDownloadResult.Value.Content;
+
+                // reduce quality
+                const int quality = 35;
+                using SKCodec? codec = SKCodec.Create(blobContent.ToStream());
+                using SKBitmap? bitmap = SKBitmap.Decode(codec);
+                SKData? result = bitmap.Encode(SKEncodedImageFormat.Jpeg, quality);
+                _logger.LogInformation("Image quality is reduced by '{Quality}%'. Before size: {SizeBefore}, After size: {SizeAfter}",
+                                       quality, bitmap.ByteCount, result.Size);
+
+                string encodedImageInBase64String = Convert.ToBase64String(result.ToArray());
+
+                float[] embedding = await _model.GenerateImageVectorEmbeddingsFromBase64StringAsync(encodedImageInBase64String,
+                                                                                                    imageFormat: "image/jpeg");
+
                 string imageInBase64String = Convert.ToBase64String(blobContent.ToArray());
-
-                float[] embedding = await _model.GenerateImageVectorEmbeddingsFromBase64StringAsync(imageInBase64String, imageFormat: "image/jpg");
-
                 PointStruct point = new()
                                     {
                                         Id = Guid.NewGuid(),

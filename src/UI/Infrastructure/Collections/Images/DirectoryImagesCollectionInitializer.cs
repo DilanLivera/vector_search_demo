@@ -1,5 +1,6 @@
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using System.Text.Json;
 using UI.Infrastructure.Models;
 
 namespace UI.Infrastructure.Collections.Images;
@@ -29,28 +30,28 @@ public sealed class DirectoryImagesCollectionInitializer
 
     public async Task<VoidResult> InitializeCollectionAsync(string collectionName)
     {
-        try
+        var logStateData = new { CollectionName = collectionName };
+        KeyValuePair<string, object> logState = new("Adding images to the collection", logStateData);
+        using (_logger.BeginScope(logState))
         {
             foreach (string image in _images)
             {
-                KeyValuePair<string, object> logState = new("Image", image);
-                using (_logger.BeginScope(logState))
+                string imageFilePath = Path.Combine(_imageDirectoryPath, image);
+
+                _logger.LogDebug("Adding '{ImageFilePath}' image to collection", imageFilePath);
+
+                if (!File.Exists(imageFilePath))
                 {
-                    string imageFilePath = Path.Combine(_imageDirectoryPath, image);
+                    _logger.LogWarning("'{ImageName}' image does not exist in the '{ImageDirectoryPath}' directory.",
+                                       image,
+                                       _imageDirectoryPath);
 
-                    _logger.LogDebug("Loading '{ImageFilePath}' image", imageFilePath);
+                    continue;
+                }
 
-                    if (!File.Exists(imageFilePath))
-                    {
-                        _logger.LogWarning("'{ImageName}' image does not exist in the '{ImageDirectoryPath}' directory.",
-                                           image,
-                                           _imageDirectoryPath);
-
-                        continue;
-                    }
-
-                    string imageFormat = Path.GetExtension(imageFilePath);
-
+                string imageFormat = Path.GetExtension(imageFilePath);
+                try
+                {
                     Vectors vectors = await _model.GenerateImageVectorEmbeddingsAsync(imageFilePath, imageFormat);
 
                     byte[] imageBytes = await File.ReadAllBytesAsync(imageFilePath);
@@ -66,17 +67,19 @@ public sealed class DirectoryImagesCollectionInitializer
                                             }
                                         };
 
-                    _ = await _qdrantClient.UpsertAsync(collectionName, points: [point]);
+                    UpdateResult upsertResult = await _qdrantClient.UpsertAsync(collectionName, points: [point]);
+
+                    _logger.LogDebug("Upsert result: {UpsertResult}", JsonSerializer.Serialize(upsertResult));
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Failed to initialize the collection");
+
+                    return VoidResult.Failure(exception);
                 }
             }
-
-            return VoidResult.Success();
         }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Failed to initialize the '{CollectionName}' collection", nameof(ImageCollection));
 
-            return VoidResult.Failure(exception);
-        }
+        return VoidResult.Success();
     }
 }

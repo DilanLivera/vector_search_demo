@@ -40,7 +40,6 @@ public sealed class ImageCollection
 
             try
             {
-
                 if (await _qdrantClient.CollectionExistsAsync(CollectionName))
                 {
                     await _qdrantClient.DeleteCollectionAsync(CollectionName);

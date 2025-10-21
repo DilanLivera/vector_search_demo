@@ -9,7 +9,7 @@
 @using static Qdrant.Client.Grpc.Conditions
 @using Range=Qdrant.Client.Grpc.Range
 
-<PageTitle>Color Vector Collection</PageTitle>
+<PageTitle>Color Collection</PageTitle>
 
 <style>
     @@keyframes float {
@@ -73,7 +73,7 @@
     <!-- Hero Content - moves up when results appear -->
     <div class="relative z-10 text-center text-white px-8 @(SearchResults.Count > 0 ? "pt-8" : "pt-[15vh]") transition-all duration-500">
         <h1 class="@(SearchResults.Count > 0 ? "text-5xl mb-4" : "text-7xl mb-12") italic font-light drop-shadow-lg tracking-wide transition-all duration-500" style="font-family: Georgia, serif;">
-            Color Vector Collection
+            Color Collection
         </h1>
 
         <!-- Status Badge -->

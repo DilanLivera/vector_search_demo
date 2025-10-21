@@ -161,6 +161,11 @@
 
     private void OnCollectionStatusChanged(object? sender, CollectionInitializationInfo info)
     {
+        if (!info.CollectionName.Equals(_collectionInitializationInfo.CollectionName))
+        {
+            return;
+        }
+
         InvokeAsync(() => {
             _collectionInitializationInfo = info;
             StateHasChanged();

@@ -205,7 +205,14 @@
 
     private async Task SearchAsync()
     {
-        SearchResults = await Collection.SearchAsync(SearchText);
+        Result<IReadOnlyList<ScoredPoint>> searchResult =  await Collection.SearchAsync(SearchText);
+
+        if (searchResult.IsFailure)
+        {
+            return;
+        }
+
+        SearchResults = searchResult.Value;
     }
 
     private async Task SearchWithFilterAsync()
@@ -215,7 +222,14 @@
                                   Filter = MatchText(field: "image_name", text: FilteredSearchImageName)
                               };
 
-        SearchResults = await Collection.SearchAsync(FilteredSearchText, condition);
+        Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(FilteredSearchText, condition);
+
+        if (searchResult.IsFailure)
+        {
+            return;
+        }
+
+        SearchResults = searchResult.Value;
     }
 
     private string GetImageDataUri(string imageInBase64String, string imageName)

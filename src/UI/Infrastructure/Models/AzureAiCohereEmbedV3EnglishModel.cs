@@ -88,7 +88,7 @@ public sealed class AzureAiCohereEmbedV3EnglishModel
         }
     }
 
-    public async Task<float[]> GenerateTextVectorEmbeddingsAsync(string searchText)
+    public async Task<Result<float[]>> GenerateTextVectorEmbeddingsAsync(string searchText)
     {
         List<string> input = [searchText];
         EmbeddingsOptions requestOptions = new(input)
@@ -109,13 +109,15 @@ public sealed class AzureAiCohereEmbedV3EnglishModel
 
             Debug.Assert(embeddings.Length == 1, message: "Embedding list must contain only one item.");
 
-            return embeddings.First(); // todo: must return a result type
+            return embeddings.First();
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Failed to generate embedding for image");
+            _logger.LogError(exception,
+                             "Failed to generate embedding for image for '{SearchText}'",
+                             searchText);
 
-            throw; // todo: must return an error result instead of throwing
+            return exception;
         }
     }
 }

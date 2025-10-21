@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using UI.Components.Pages;
@@ -100,13 +101,29 @@ public sealed class ImageCollection
     /// </summary>
     /// <param name="text">The text to search for.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
-    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string text)
+    public async Task<Result<IReadOnlyList<ScoredPoint>>> SearchAsync(string text)
     {
-        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(text);
+        try
+        {
+            Result<float[]> generateEmbeddingsResult = await _model.GenerateTextVectorEmbeddingsAsync(text);
 
-        return await _qdrantClient.SearchAsync(CollectionName,
-                                               queryVector,
-                                               limit: Limit);
+            if (generateEmbeddingsResult.IsFailure)
+            {
+                return generateEmbeddingsResult.Error;
+            }
+
+            IReadOnlyList<ScoredPoint> searchResult = await _qdrantClient.SearchAsync(CollectionName,
+                                                                                       generateEmbeddingsResult.Value,
+                                                                                       limit: Limit);
+
+             return searchResult.ToList().AsReadOnly();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "'{Text}' text search failed. ", text);
+
+            return exception;
+        }
     }
 
     /// <summary>
@@ -115,13 +132,32 @@ public sealed class ImageCollection
     /// <param name="text">The text to search for.</param>
     /// <param name="condition">The filtering condition to apply to the search.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
-    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string text, Condition condition)
+    public async Task<Result<IReadOnlyList<ScoredPoint>>> SearchAsync(string text, Condition condition)
     {
-        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(text);
+        try
+        {
+            Result<float[]> generateEmbeddingsResult = await _model.GenerateTextVectorEmbeddingsAsync(text);
 
-        return await _qdrantClient.SearchAsync(CollectionName,
-                                               queryVector,
-                                               filter: condition,
-                                               limit: Limit);
+            if (generateEmbeddingsResult.IsFailure)
+            {
+                return generateEmbeddingsResult.Error;
+            }
+
+            IReadOnlyList<ScoredPoint> searchResult =  await _qdrantClient.SearchAsync(CollectionName,
+                                                                                 generateEmbeddingsResult.Value,
+                                                                                 filter: condition,
+                                                                                 limit: Limit);
+
+            return searchResult.ToList().AsReadOnly();
+
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception,
+                             "'{Text}' text with '{Condition}' search failed. ",
+                             text,
+                             JsonSerializer.Serialize(condition));
+            return exception;
+        }
     }
 }

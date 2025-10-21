@@ -30,6 +30,29 @@
     <!-- Floating Rocks -->
     <FloatingRocks />
 
+    <!-- Error Message -->
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="max-w-2xl mx-auto mb-4 animate-fade-in pt-3">
+            <div class="bg-red-500/90 backdrop-blur-md border-2 border-red-300/50 rounded-lg px-6 py-4 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-white mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <h3 class="text-white font-semibold text-lg">Search Failed</h3>
+                    </div>
+                    <button @onclick="ClearError" class="text-white/70 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-white/90 text-center">@ErrorMessage</p>
+            </div>
+        </div>
+    }
+
     <!-- Hero Content - moves up when results appear -->
     <div class="relative z-10 text-center text-white px-8 @(SearchResults.Count > 0 ? "pt-8" : "pt-[15vh]") transition-all duration-500">
         <h1 class="@(SearchResults.Count > 0 ? "text-5xl mb-4" : "text-7xl mb-12") italic font-light drop-shadow-lg tracking-wide transition-all duration-500" style="font-family: Georgia, serif;">
@@ -109,6 +132,7 @@
     private string FilteredSearchText { get; set; } = "bird";
     private string FilteredSearchImageName { get; set; } = "parrot";
     private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
+    private string ErrorMessage { get; set; } = string.Empty;
 
     private CollectionInitializationInfo _collectionInitializationInfo = new(nameof(ImageCollection));
 
@@ -138,7 +162,15 @@
     {
         using (Activity? activity = OtelHelpers.ActivitySource.StartActivity(name: OtelHelpers.ActivityNames.ImageSearchVectorsMessage))
         {
-            SearchResults = await Collection.SearchAsync(SearchText);
+            Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(SearchText);
+
+            if (searchResult.IsFailure)
+            {
+                ErrorMessage = $"{searchResult.Error.GetType().Name}: {searchResult.Error.Message}";
+                return;
+            }
+
+            SearchResults = searchResult.Value;
         }
     }
 
@@ -149,7 +181,20 @@
                                   Filter = MatchText(field: "image_name", text: FilteredSearchImageName)
                               };
 
-        SearchResults = await Collection.SearchAsync(FilteredSearchText, condition);
+        Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(FilteredSearchText, condition);
+
+        if (searchResult.IsFailure)
+        {
+            ErrorMessage = $"{searchResult.Error.GetType().Name}: {searchResult.Error.Message}";
+            return;
+        }
+
+        SearchResults = searchResult.Value;
+    }
+
+    private void ClearError()
+    {
+        ErrorMessage = null;
     }
 
     private string GetImageDataUri(string imageInBase64String, string imageName)

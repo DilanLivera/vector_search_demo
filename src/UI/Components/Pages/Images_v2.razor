@@ -93,9 +93,12 @@
                             <tr class="hover:bg-white/10 transition-colors">
                                 <td class="px-6 py-4 text-white">@result.Id.Uuid</td>
                                 <td class="px-6 py-4 text-white">@result.Score</td>
-                                <td class="px-6 py-4 text-white"><img src="@GetImageDataUri(result.Payload["image_in_base64_string"].StringValue, result.Payload["image_name"].StringValue)"
-                                                                      alt="@result.Payload["image_name"].StringValue"
-                                                                      class="max-w-32 max-h-32 object-contain"/></td>
+                                <td class="px-6 py-4 text-white">
+                                    <img src="@GetImageDataUri(result.Payload["image_in_base64_string"].StringValue, result.Payload["image_name"].StringValue)"
+                                         alt="@result.Payload["image_name"].StringValue"
+                                         class="max-w-32 max-h-32 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                                         @onclick="() => OpenImageModal(result)"/>
+                                </td>
                                 <td class="px-6 py-4 text-white">@result.Payload["image_name"].StringValue</td>
                             </tr>
                         }
@@ -107,12 +110,30 @@
     </div>
 </div>
 
+@if (_selectedImage != null)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+         @onclick="CloseImageModal">
+        <div class="relative max-w-7xl max-h-[90vh]" @onclick:stopPropagation>
+            <button @onclick="CloseImageModal"
+                    class="absolute -top-10 right-0 text-white text-4xl hover:text-gray-300 font-light">
+                &times;
+            </button>
+            <img src="@GetImageDataUri(_selectedImage.Payload["image_in_base64_string"].StringValue, _selectedImage.Payload["image_name"].StringValue)"
+                 alt="@_selectedImage.Payload["image_name"].StringValue"
+                 class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"/>
+            <p class="text-white text-center mt-4 text-lg">@_selectedImage.Payload["image_name"].StringValue</p>
+        </div>
+    </div>
+}
+
 @code {
     private string SearchText { get; set; } = "flying objects";
     private string FilteredSearchText { get; set; } = "bird";
     private string FilteredSearchImageName { get; set; } = "parrot";
     private IReadOnlyList<ScoredPoint> SearchResults { get; set; } = [];
-    private string ErrorMessage { get; set; } = string.Empty;
+    private string? ErrorMessage { get; set; }
+    private ScoredPoint? _selectedImage = null;
 
     private CollectionInitializationInfo _collectionInitializationInfo = new(nameof(ImageCollection));
 
@@ -175,6 +196,16 @@
     private void ClearError()
     {
         ErrorMessage = null;
+    }
+
+    private void OpenImageModal(ScoredPoint result)
+    {
+        _selectedImage = result;
+    }
+
+    private void CloseImageModal()
+    {
+        _selectedImage = null;
     }
 
     private string GetImageDataUri(string imageInBase64String, string imageName)

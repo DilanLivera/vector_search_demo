@@ -205,7 +205,15 @@
 
     private async Task SearchVectorsAsync()
     {
-        SearchResults = await Collection.SearchAsync(SearchVectorsColor);
+        Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(SearchVectorsColor);
+
+        if (searchResult.IsFailure)
+        {
+            // show error message
+            return;
+        }
+
+        SearchResults = searchResult.Value;
     }
 
     private async Task SearchWithFilterAsync()
@@ -215,6 +223,14 @@
                                   Filter = Range(field: "rand_number", new Range { Gte = FilteredSearchMinRandomNumber })
                               };
 
-        SearchResults = await Collection.SearchAsync(FilteredSearchColor, condition);
+        Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(FilteredSearchColor, condition);
+
+        if (searchResult.IsFailure)
+        {
+            // show error message
+            return;
+        }
+
+        SearchResults = searchResult.Value;
     }
 }

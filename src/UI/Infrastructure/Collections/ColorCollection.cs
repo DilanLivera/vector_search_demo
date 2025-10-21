@@ -178,11 +178,21 @@ public sealed class ColorCollection
                 List<PointStruct> points = [];
                 foreach (string color in Colors)
                 {
-                    Vectors vectors = await _model.GenerateTextVectorEmbeddingsAsync(color);
+                    Result<float[]> generateEmbeddingsResult = await _model.GenerateTextVectorEmbeddingsAsync(color);
+
+                    if (generateEmbeddingsResult.IsFailure)
+                    {
+                        _logger.LogWarning(generateEmbeddingsResult.Error,
+                                           "Failed to generate text vector embeddings for '{Color}' color",
+                                           color);
+
+                        continue;
+                    }
+
                     PointStruct point = new()
                                         {
                                             Id = (ulong)points.Count + 1,
-                                            Vectors = vectors,
+                                            Vectors = generateEmbeddingsResult.Value,
                                             Payload =
                                             {
                                                 ["color"] = color, ["rand_number"] = (points.Count + 1) % 10
@@ -214,30 +224,57 @@ public sealed class ColorCollection
     /// <summary>
     /// Searches for the most similar vectors to the query vector.
     /// </summary>
-    /// <param name="color">The color to search for.</param>
+    /// <param name="input">The text input to search for.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
-    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string color)
+    public async Task<Result<IReadOnlyList<ScoredPoint>>> SearchAsync(string input)
     {
-        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(color);
+        Result<float[]> generateEmbeddingsResult = await _model.GenerateTextVectorEmbeddingsAsync(input);
 
-        return await _qdrantClient.SearchAsync(CollectionName,
-                                               queryVector,
-                                               limit: Limit);
+        if (generateEmbeddingsResult.IsFailure)
+        {
+            return Result<IReadOnlyList<ScoredPoint>>.Failure(generateEmbeddingsResult.Error);
+        }
+
+        try
+        {
+            IReadOnlyList<ScoredPoint> searchResult = await _qdrantClient.SearchAsync(CollectionName,
+                                                                                      generateEmbeddingsResult.Value,
+                                                                                      limit: Limit);
+
+            return Result<IReadOnlyList<ScoredPoint>>.Success(searchResult);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "'{Input}' search Failed", input);
+
+            return Result<IReadOnlyList<ScoredPoint>>.Failure(exception);
+        }
     }
 
     /// <summary>
     /// Searches for the most similar vectors to the query vector with additional filtering conditions.
     /// </summary>
-    /// <param name="color">The color to search for.</param>
+    /// <param name="input">The color to search for.</param>
     /// <param name="condition">The filtering condition to apply to the search.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of scored points.</returns>
-    public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(string color, Condition condition)
+    public async Task<Result<IReadOnlyList<ScoredPoint>>> SearchAsync(string input, Condition condition)
     {
-        float[] queryVector = await _model.GenerateTextVectorEmbeddingsAsync(color);
+        Result<float[]> generateEmbeddingsResult = await _model.GenerateTextVectorEmbeddingsAsync(input);
 
-        return await _qdrantClient.SearchAsync(CollectionName,
-                                               queryVector,
-                                               filter: condition,
-                                               limit: Limit);
+        try
+        {
+            IReadOnlyList<ScoredPoint> searchResult =  await _qdrantClient.SearchAsync(CollectionName,
+                                                                                       generateEmbeddingsResult.Value,
+                                                                                       filter: condition,
+                                                                                       limit: Limit);
+
+            return Result<IReadOnlyList<ScoredPoint>>.Success(searchResult);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "'{Input}' search Failed", input);
+
+            return Result<IReadOnlyList<ScoredPoint>>.Failure(exception);
+        }
     }
 }

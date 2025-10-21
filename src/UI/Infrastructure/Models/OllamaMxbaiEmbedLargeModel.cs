@@ -30,17 +30,26 @@ public sealed class OllamaMxbaiEmbedLargeModel
     /// A task that represents the asynchronous operation. The task result contains a <c>float[]</c>
     /// representing the generated vector embedding.
     /// </returns>
-    public async Task<float[]> GenerateTextVectorEmbeddingsAsync(string input)
+    public async Task<Result<float[]>> GenerateTextVectorEmbeddingsAsync(string input)
     {
         EmbeddingGenerationOptions options = new()
                                              {
                                                  ModelId = "mxbai-embed-large"
                                              };
-        Embedding<float> embedding = await _embeddingGenerator.GenerateAsync(input, options);
+        try
+        {
+            Embedding<float> embedding = await _embeddingGenerator.GenerateAsync(input, options);
 
-        _logger.LogDebug("Embedding: {Embedding}", JsonSerializer.Serialize(embedding));
+            _logger.LogDebug("Embedding: {Embedding}", JsonSerializer.Serialize(embedding));
 
-        return embedding.Vector.ToArray();
+            return embedding.Vector.ToArray();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to generate text vector embeddings for '{Input}'", input);
+
+            return Result<float[]>.Failure(exception);
+        }
     }
 
 }

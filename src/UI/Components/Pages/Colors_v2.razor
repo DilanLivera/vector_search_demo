@@ -142,7 +142,15 @@
                 activity.SetTag("input", SearchVectorsColor);
             }
 
-            SearchResults = await Collection.SearchAsync(SearchVectorsColor);
+            Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(SearchVectorsColor);
+
+            if (searchResult.IsFailure)
+            {
+                // show error message
+                return;
+            }
+
+            SearchResults = searchResult.Value;
         }
     }
 
@@ -153,7 +161,15 @@
                                   Filter = Range(field: "rand_number", new Range { Gte = FilteredSearchMinRandomNumber })
                               };
 
-        SearchResults = await Collection.SearchAsync(FilteredSearchColor, condition);
+        Result<IReadOnlyList<ScoredPoint>> searchResult = await Collection.SearchAsync(FilteredSearchColor, condition);
+
+        if (searchResult.IsFailure)
+        {
+            // show error message
+            return;
+        }
+
+        SearchResults = searchResult.Value;
     }
 
 }

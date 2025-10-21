@@ -10,39 +10,6 @@
 <PageTitle>Image Collection</PageTitle>
 
 <style>
-    @@keyframes float {
-        0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-        }
-        50% {
-            transform: translateY(-30px) rotate(5deg);
-        }
-    }
-
-    .animate-float {
-        animation: float 20s ease-in-out infinite;
-    }
-
-    .animate-float-delay-1 {
-        animation-delay: -5s;
-    }
-
-    .animate-float-delay-2 {
-        animation-delay: -10s;
-    }
-
-    .animate-float-delay-3 {
-        animation-delay: -15s;
-    }
-
-    .animate-float-delay-4 {
-        animation-delay: -7s;
-    }
-
-    .animate-float-delay-5 {
-        animation-delay: -12s;
-    }
-
     @@keyframes fadeIn {
         from {
             opacity: 0;
@@ -61,12 +28,7 @@
 
 <div class="relative bg-gradient-to-b from-blue-700 via-blue-600 to-blue-500 overflow-hidden transition-all duration-500 flex flex-col" style="min-height: calc(100vh - 5rem);">
     <!-- Floating Rocks -->
-    <div class="absolute w-48 h-44 top-[5%] left-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float"></div>
-    <div class="absolute w-36 h-32 top-[15%] right-[15%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-1"></div>
-    <div class="absolute w-44 h-40 bottom-[20%] left-[5%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-2"></div>
-    <div class="absolute w-40 h-36 bottom-[10%] right-[10%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-3"></div>
-    <div class="absolute w-32 h-28 top-[40%] left-[20%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-4"></div>
-    <div class="absolute w-36 h-32 top-[50%] right-[25%] bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 rounded-[50%_40%_45%_55%] shadow-2xl animate-float animate-float-delay-5"></div>
+    <FloatingRocks />
 
     <!-- Hero Content - moves up when results appear -->
     <div class="relative z-10 text-center text-white px-8 @(SearchResults.Count > 0 ? "pt-8" : "pt-[15vh]") transition-all duration-500">

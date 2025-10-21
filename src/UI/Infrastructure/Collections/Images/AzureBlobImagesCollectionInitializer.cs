@@ -66,7 +66,9 @@ public sealed class AzureBlobImagesCollectionInitializer
                 using SKBitmap? bitmap = SKBitmap.Decode(codec);
                 using SKData? result = bitmap.Encode(SKEncodedImageFormat.Jpeg, quality);
                 _logger.LogInformation("Image quality is reduced to '{Quality}%'. Before size: {SizeBefore}, After size: {SizeAfter}",
-                                       quality, bitmap.ByteCount, result.Size);
+                                       quality,
+                                       bitmap.ByteCount,
+                                       result.Size);
 
                 string encodedImageInBase64String = Convert.ToBase64String(result.ToArray());
 

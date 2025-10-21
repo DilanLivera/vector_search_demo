@@ -196,8 +196,7 @@
             return;
         }
 
-        InvokeAsync(() =>
-        {
+        InvokeAsync(() => {
             _collectionInitializationInfo = info;
             StateHasChanged();
         });

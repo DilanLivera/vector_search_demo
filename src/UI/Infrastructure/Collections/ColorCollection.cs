@@ -263,10 +263,10 @@ public sealed class ColorCollection
 
         try
         {
-            IReadOnlyList<ScoredPoint> searchResult =  await _qdrantClient.SearchAsync(CollectionName,
-                                                                                       generateEmbeddingsResult.Value,
-                                                                                       filter: condition,
-                                                                                       limit: Limit);
+            IReadOnlyList<ScoredPoint> searchResult = await _qdrantClient.SearchAsync(CollectionName,
+                                                                                      generateEmbeddingsResult.Value,
+                                                                                      filter: condition,
+                                                                                      limit: Limit);
 
             return Result<IReadOnlyList<ScoredPoint>>.Success(searchResult);
         }

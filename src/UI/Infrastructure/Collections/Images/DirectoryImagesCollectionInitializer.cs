@@ -30,7 +30,10 @@ public sealed class DirectoryImagesCollectionInitializer
 
     public async Task<VoidResult> InitializeCollectionAsync(string collectionName)
     {
-        var logStateData = new { CollectionName = collectionName };
+        var logStateData = new
+                           {
+                               CollectionName = collectionName
+                           };
         KeyValuePair<string, object> logState = new("Adding images to the collection", logStateData);
         using (_logger.BeginScope(logState))
         {

@@ -113,10 +113,10 @@ public sealed class ImageCollection
             }
 
             IReadOnlyList<ScoredPoint> searchResult = await _qdrantClient.SearchAsync(CollectionName,
-                                                                                       generateEmbeddingsResult.Value,
-                                                                                       limit: Limit);
+                                                                                      generateEmbeddingsResult.Value,
+                                                                                      limit: Limit);
 
-             return searchResult.ToList().AsReadOnly();
+            return searchResult.ToList().AsReadOnly();
         }
         catch (Exception exception)
         {
@@ -143,10 +143,10 @@ public sealed class ImageCollection
                 return generateEmbeddingsResult.Error;
             }
 
-            IReadOnlyList<ScoredPoint> searchResult =  await _qdrantClient.SearchAsync(CollectionName,
-                                                                                 generateEmbeddingsResult.Value,
-                                                                                 filter: condition,
-                                                                                 limit: Limit);
+            IReadOnlyList<ScoredPoint> searchResult = await _qdrantClient.SearchAsync(CollectionName,
+                                                                                      generateEmbeddingsResult.Value,
+                                                                                      filter: condition,
+                                                                                      limit: Limit);
 
             return searchResult.ToList().AsReadOnly();
 
@@ -157,6 +157,7 @@ public sealed class ImageCollection
                              "'{Text}' text with '{Condition}' search failed. ",
                              text,
                              JsonSerializer.Serialize(condition));
+
             return exception;
         }
     }

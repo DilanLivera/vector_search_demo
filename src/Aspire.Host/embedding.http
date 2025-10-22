@@ -1,0 +1,8 @@
+﻿### get embeddings
+POST http://localhost:53731/api/embed
+Content-Type: application/json
+
+{
+  "model": "mxbai-embed-large:335m",
+  "input": "testing 1 2 3"
+}

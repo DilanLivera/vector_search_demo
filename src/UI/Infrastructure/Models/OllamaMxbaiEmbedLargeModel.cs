@@ -34,7 +34,7 @@ public sealed class OllamaMxbaiEmbedLargeModel
     {
         EmbeddingGenerationOptions options = new()
                                              {
-                                                 ModelId = "mxbai-embed-large"
+                                                 ModelId = "mxbai-embed-large:335m"
                                              };
         try
         {

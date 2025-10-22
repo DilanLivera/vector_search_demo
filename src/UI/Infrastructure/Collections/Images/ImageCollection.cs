@@ -74,7 +74,7 @@ public sealed class ImageCollection
                                                    InitializationStatus.Failed,
                                                    errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
 
-                return VoidResult.Failure(exception);
+                return exception;
             }
 
             VoidResult result = await _collectionInitializer.InitializeCollectionAsync(CollectionName);
@@ -85,7 +85,7 @@ public sealed class ImageCollection
                                                    InitializationStatus.Failed,
                                                    errorMessage: $"Failed to initialize '{CollectionName}' due to '{result.Error.Message}' error.");
 
-                return VoidResult.Failure(result.Error);
+                return result.Error;
             }
 
             activity?.AddEvent(new ActivityEvent(name: "Points added to the collection"));

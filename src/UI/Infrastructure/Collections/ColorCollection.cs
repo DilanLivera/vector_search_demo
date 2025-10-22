@@ -216,7 +216,7 @@ public sealed class ColorCollection
                                                    InitializationStatus.Failed,
                                                    errorMessage: $"Failed to initialize '{CollectionName}' due to '{exception.Message}' error.");
 
-                return VoidResult.Failure(exception.Message);
+                return exception;
             }
         }
     }
